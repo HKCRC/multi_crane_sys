@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'visual_collision = visual_collision.visual_collision:main'
+            'visual_collision = visual_collision.visual_collision:main',
+            'test_publisher   = visual_collision.test_publisher:main'
         ],
     },
 )

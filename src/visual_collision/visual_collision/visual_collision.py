@@ -1,7 +1,13 @@
+import signal
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import math
+import rclpy
+from rclpy.node import Node
+from multi_crane_msg.msg import MultiCraneMsg, TowerCraneMsg, LuffingJibCraneMsg  # Replace with your package name
+
 
 class TowerCrane:
     def __init__(self, id, type, crane_x, crane_y, crane_z, boom_length,boom_angle,trolley_radius,hook_height):
@@ -61,15 +67,17 @@ class TowerCrane:
         self.hook_y = self.trolley_y
         self.hook_z = self.hook_height
 
-    def move(self, new_x, new_y):
+    def update_state(self, boom_angle=None, trolley_radius=None, hook_height=None):
         """
-        Move the crane to a new position.
-        
-        :param new_x: New X-coordinate.
-        :param new_y: New Y-coordinate.
+        update states for tower crane.
         """
-        self.crane_x = new_x
-        self.crane_y = new_y
+        if boom_angle is not None:
+            self.boom_angle = boom_angle
+        if trolley_radius is not None:
+            self.trolley_radius = trolley_radius
+        if hook_height is not None:
+            self.hook_height = hook_height
+        self.cylindricalCoor2cartesianCoor()
 
     def check_collision(self, other_crane):
         """
@@ -130,6 +138,17 @@ class LuffingJibCrane:
         self.hook_x = self.crane_x  + self.boom_length*math.cos(self.boom_horAngle)
         self.hook_y = self.crane_y  + self.boom_length*math.sin(self.boom_horAngle)
         self.hook_z = self.hook_height
+    
+    def update_state(self, boom_horAngle=None, boom_verAngle=None, hook_height=None):
+        """
+        """
+        if boom_horAngle is not None:
+            self.boom_horAngle = boom_horAngle
+        if boom_verAngle is not None:
+            self.boom_verAngle = boom_verAngle
+        if hook_height is not None:
+            self.hook_height = hook_height
+        self.cylindricalCoor2cartesianCoor()
 
 
 class CraneVisualizer:
@@ -138,6 +157,12 @@ class CraneVisualizer:
         Initialize the visualizer.
         """
         self.cranes = []
+        plt.ion()  # Enable interactive mode
+        self.fig = plt.figure(figsize=(18, 6))
+        self.ax1 = self.fig.add_subplot(131, projection='3d')  # 3D View
+        self.ax2 = self.fig.add_subplot(132)  # Front View (2D)
+        self.ax3 = self.fig.add_subplot(133)  # Top View (2D)
+        self.visualize_all()
 
     def add_crane(self, crane):
         """
@@ -146,6 +171,31 @@ class CraneVisualizer:
         :param crane: TowerCrane object.
         """
         self.cranes.append(crane)
+    
+    def update_crane_state(self, crane_id, **kwargs):
+        """
+        Update the state of a specific crane and refresh the visualization.
+        """
+        for crane in self.cranes:
+            if crane.id == crane_id:
+                crane.update_state(**kwargs)
+                break
+        self.update_visualization()
+
+    def update_visualization(self):
+        """
+        Clear and redraw the plots.
+        """
+        self.ax1.clear()
+        self.ax2.clear()
+        self.ax3.clear()
+
+        self.visualize_3d(self.ax1)
+        self.visualize_front_view(self.ax2)
+        self.visualize_top_view(self.ax3)
+
+        plt.draw()
+        plt.pause(0.1)
 
     def visualize_tower_crane_3D(self,crane,ax):
         # Plot the base of the crane
@@ -268,22 +318,17 @@ class CraneVisualizer:
         """
         Visualize all three views (3D, front view, top view) in the same figure.
         """
-        fig = plt.figure(figsize=(18, 6))
-
         # 3D View
-        ax1 = fig.add_subplot(131, projection='3d')
-        self.visualize_3d(ax1)
+        self.visualize_3d(self.ax1)
 
         # Front View (2D)
-        ax2 = fig.add_subplot(132)
-        self.visualize_front_view(ax2)
+        self.visualize_front_view(self.ax2)
 
         # Top View (2D)
-        ax3 = fig.add_subplot(133)
-        self.visualize_top_view(ax3)
+        self.visualize_top_view(self.ax3)
 
         plt.tight_layout()
-        plt.show()
+        plt.show(block=False)
 
     def check_all_collisions(self):
         """
@@ -294,13 +339,72 @@ class CraneVisualizer:
                 if self.cranes[i].check_collision(self.cranes[j]):
                     print(f"Collision detected between Crane {self.cranes[i].id} and Crane {self.cranes[j].id}")
 
-def main():
+class MultiCraneSubscriber(Node):
+
+    def __init__(self):
+        super().__init__('multi_crane_subscriber')
+        self.subscription = self.create_subscription(
+            MultiCraneMsg,
+            'multi_crane',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
+
+    def listener_callback(self, msg):
+       # parse TowerCraneMsg array
+        global visualizer
+       
+
+        for tower_crane in msg.tower_crane_msgs:
+            visualizer.update_crane_state(tower_crane.crane_id, boom_angle=tower_crane.boom_angle, \
+                trolley_radius=tower_crane.trolley_radius, hook_height=tower_crane.hook_height)
+            # for debug
+            self.get_logger().info(
+                f'Tower Crane ID: {tower_crane.crane_id}, '
+                f'Type: {tower_crane.crane_type}, '
+                f'Position: ({tower_crane.crane_x}, {tower_crane.crane_y}, {tower_crane.crane_z}), '
+                f'Boom Length: {tower_crane.boom_length}, '
+                f'Boom Angle: {tower_crane.boom_angle}, '
+                f'Trolley Radius: {tower_crane.trolley_radius}, '
+                f'Hook Height: {tower_crane.hook_height}'
+            )
+
+        # parse LuffingJibCraneMsg array
+        for luffing_jib_crane in msg.luffing_jib_crane_msgs:
+            visualizer.update_crane_state(luffing_jib_crane.crane_id, boom_horAngle=luffing_jib_crane.boom_hor_angle, \
+                boom_verAngle=luffing_jib_crane.boom_ver_angle, hook_height=luffing_jib_crane.hook_height)
+            # for debug
+            self.get_logger().info(
+                f'Luffing Jib Crane ID: {luffing_jib_crane.crane_id}, '
+                f'Type: {luffing_jib_crane.crane_type}, '
+                f'Position: ({luffing_jib_crane.crane_x}, {luffing_jib_crane.crane_y}, {luffing_jib_crane.crane_z}), '
+                f'Boom Length: {luffing_jib_crane.boom_length}, '
+                f'Boom Horizontal Angle: {luffing_jib_crane.boom_hor_angle}, '
+                f'Boom Vertical Angle: {luffing_jib_crane.boom_ver_angle}, '
+                f'Hook Height: {luffing_jib_crane.hook_height}'
+            )
+
+        
+def signal_handler(sig, frame):
+    """
+    Handle the signal (e.g., Ctrl+C) to gracefully exit the program.
+    """
+    print("\nProgram terminated by user. Exiting gracefully...")
+    plt.close('all')  # Close all Matplotlib figures
+    plt.ioff()        # Turn off interactive mode
+    sys.exit(0)       # Exit the program
+
+def main(args=None):
+    # Register the signal handler for Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+
     # Create cranes
-    crane1 = TowerCrane(id=1, type = 'towerCrane', crane_x=20, crane_y=30, crane_z=50,  boom_length=15, boom_angle= math.radians(30), trolley_radius= 5, hook_height =5)
-    crane2 = TowerCrane(id=2, type = 'towerCrane', crane_x=40, crane_y=50, crane_z=40,  boom_length=10, boom_angle= math.radians(60), trolley_radius= 5, hook_height =5)
+    crane1 = TowerCrane(id=1, type = 'towerCrane', crane_x=20, crane_y=30, crane_z=50,  boom_length=25, boom_angle= math.radians(30), trolley_radius= 5, hook_height =5)
+    crane2 = TowerCrane(id=2, type = 'towerCrane', crane_x=40, crane_y=50, crane_z=40,  boom_length=15, boom_angle= math.radians(60), trolley_radius= 5, hook_height =5)
     crane3 = LuffingJibCrane(id=3, type = 'luffingJibCrane', crane_x=60, crane_y=20, crane_z=20,  boom_length=20, boom_horAngle= math.radians(30), boom_verAngle= math.radians(60), hook_height =15)
 
     # Add cranes to visualizer
+    global visualizer
     visualizer = CraneVisualizer()
     visualizer.add_crane(crane1)
     visualizer.add_crane(crane2)
@@ -308,22 +412,41 @@ def main():
 
     visualizer.visualize_all()
 
-    # Example of updating crane state in real time
+    ##  munual input to test
     # while True:
     #     try:
     #         crane_id = int(input("Enter crane ID to update (1, 2, or 3): "))
-    #         if crane_id == 1 or crane_id == 2:
-    #             boom_angle = math.radians(float(input("Enter boom angle (degrees): ")))
-    #             trolley_radius = float(input("Enter trolley radius: "))
-    #             hook_height = float(input("Enter hook height: "))
-    #             visualizer.update_crane_state(crane_id, boom_angle=boom_angle, trolley_radius=trolley_radius, hook_height=hook_height)
-    #         elif crane_id == 3:
-    #             boom_horAngle = math.radians(float(input("Enter boom horizontal angle (degrees): ")))
-    #             boom_verAngle = math.radians(float(input("Enter boom vertical angle (degrees): ")))
-    #             hook_height = float(input("Enter hook height: "))
-    #             visualizer.update_crane_state(crane_id, boom_horAngle=boom_horAngle, boom_verAngle=boom_verAngle, hook_height=hook_height)
+    #         for crane in visualizer.cranes:
+    #             if crane.id == crane_id:
+    #                 if crane.type == 'towerCrane':
+    #                     boom_angle = math.radians(float(input("Enter boom angle (degrees): ")))
+    #                     trolley_radius = float(input("Enter trolley radius: "))
+    #                     hook_height = float(input("Enter hook height: "))
+    #                     visualizer.update_crane_state(crane_id, boom_angle=boom_angle, trolley_radius=trolley_radius, hook_height=hook_height)
+    #                 elif crane.type == 'luffingJibCrane':
+    #                     boom_horAngle = math.radians(float(input("Enter boom horizontal angle (degrees): ")))
+    #                     boom_verAngle = math.radians(float(input("Enter boom vertical angle (degrees): ")))
+    #                     hook_height = float(input("Enter hook height: "))
+    #                     visualizer.update_crane_state(crane_id, boom_horAngle=boom_horAngle, boom_verAngle=boom_verAngle, hook_height=hook_height)
+    #         # crane_type = string(input("There is no that crane. Create a new crane and enter crane type to update (towerCrane, or luffingJibCrane): "))        
     #     except ValueError:
     #         print("Invalid input. Please try again.")
+    #     except KeyboardInterrupt:
+    #         # Handle Ctrl+C explicitly
+    #         signal_handler(None, None)
+
+    # create a ros2 node for subscriber. subscriber contains the information
+    # to update crane states
+    rclpy.init(args=args)
+    multi_crane_subscriber = MultiCraneSubscriber()
+    rclpy.spin(multi_crane_subscriber)
+    # Destroy the node explicitly (optional - otherwise it will be done automatically
+    # when the garbage collector destroys the node object)
+    multi_crane_subscriber.destroy_node()
+    rclpy.shutdown()
+
+
+
 
 
 if __name__ == '__main__':
