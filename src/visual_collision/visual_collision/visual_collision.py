@@ -415,40 +415,40 @@ def main(args=None):
     # Register the signal handler for Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
     
-    # Create a towerCrane message
-    tower_crane_msg = TowerCraneMsg()
-    tower_crane_msg.crane_id = 1
-    tower_crane_msg.crane_type = "towerCrane"
-    tower_crane_msg.crane_x = 20.0
-    tower_crane_msg.crane_y = 30.0
-    tower_crane_msg.crane_z = 50.0
-    tower_crane_msg.boom_length = 25.0
-    tower_crane_msg.boom_angle = 45.0 # Dynamically changing
-    tower_crane_msg.trolley_radius = 16.3  # Dynamically changing
-    tower_crane_msg.hook_height = 10.7  # Dynamically changing
+    # # Create a towerCrane message
+    # tower_crane_msg = TowerCraneMsg()
+    # tower_crane_msg.crane_id = 1
+    # tower_crane_msg.crane_type = "towerCrane"
+    # tower_crane_msg.crane_x = 20.0
+    # tower_crane_msg.crane_y = 30.0
+    # tower_crane_msg.crane_z = 50.0
+    # tower_crane_msg.boom_length = 25.0
+    # tower_crane_msg.boom_angle = 45.0 # Dynamically changing
+    # tower_crane_msg.trolley_radius = 16.3  # Dynamically changing
+    # tower_crane_msg.hook_height = 10.7  # Dynamically changing
 
-    # Create a LuffingJibCrane message
-    luffing_jib_crane_msg = LuffingJibCraneMsg()
-    luffing_jib_crane_msg.crane_id = 4
-    luffing_jib_crane_msg.crane_type = "luffingJibCrane"
-    luffing_jib_crane_msg.crane_x = 66.0
-    luffing_jib_crane_msg.crane_y = 52.0
-    luffing_jib_crane_msg.crane_z = 45.0
-    luffing_jib_crane_msg.boom_length = 18.4
-    luffing_jib_crane_msg.boom_hor_angle = 50.0 # Dynamically changing
-    luffing_jib_crane_msg.boom_ver_angle = 60.0 # Dynamically changing
-    luffing_jib_crane_msg.hook_height = 10.2  # Dynamically changing
+    # # Create a LuffingJibCrane message
+    # luffing_jib_crane_msg = LuffingJibCraneMsg()
+    # luffing_jib_crane_msg.crane_id = 4
+    # luffing_jib_crane_msg.crane_type = "luffingJibCrane"
+    # luffing_jib_crane_msg.crane_x = 66.0
+    # luffing_jib_crane_msg.crane_y = 52.0
+    # luffing_jib_crane_msg.crane_z = 45.0
+    # luffing_jib_crane_msg.boom_length = 18.4
+    # luffing_jib_crane_msg.boom_hor_angle = 50.0 # Dynamically changing
+    # luffing_jib_crane_msg.boom_ver_angle = 60.0 # Dynamically changing
+    # luffing_jib_crane_msg.hook_height = 10.2  # Dynamically changing
 
-    # Create cranes
-    crane1 = TowerCrane(tower_crane_msg)
-    crane2 = LuffingJibCrane(luffing_jib_crane_msg)
+    # # Create cranes
+    # crane1 = TowerCrane(tower_crane_msg)
+    # crane2 = LuffingJibCrane(luffing_jib_crane_msg)
    
     # Add cranes to crane_swarm
     global crane_swarm
     crane_swarm = CraneSwarm()
-    crane_swarm.add_crane(crane1)
-    crane_swarm.add_crane(crane2)
-    crane_swarm.update_visualization()
+    # crane_swarm.add_crane(crane1)
+    # crane_swarm.add_crane(crane2)
+    # crane_swarm.update_visualization()
 
     # create a ros2 node for subscriber. subscriber contains the information
     # to update crane states
