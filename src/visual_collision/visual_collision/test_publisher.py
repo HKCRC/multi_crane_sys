@@ -109,10 +109,23 @@ class MultiCranePublisher(Node):
         luffing_jib_crane_msg1.boom_ver_angle = math.radians((self.i * 5.0) % 90) # Dynamically changing
         luffing_jib_crane_msg1.hook_height = 15 + 2 * math.sin(self.i / 10.0)  # Dynamically changing
 
+        # Create a LuffingJibCrane message
+        luffing_jib_crane_msg2 = LuffingJibCraneMsg()
+        luffing_jib_crane_msg2.crane_id = 4
+        luffing_jib_crane_msg2.crane_type = "luffingJibCrane"
+        luffing_jib_crane_msg2.crane_x = 80.0
+        luffing_jib_crane_msg2.crane_y = 80.0
+        luffing_jib_crane_msg2.crane_z = 20.0
+        luffing_jib_crane_msg2.boom_length = 10.0
+        luffing_jib_crane_msg2.boom_hor_angle = math.radians((self.i * 5.0) % 360) # Dynamically changing
+        luffing_jib_crane_msg2.boom_ver_angle = math.radians((self.i * 5.0) % 90) # Dynamically changing
+        luffing_jib_crane_msg2.hook_height = 10 + 2 * math.sin(self.i / 10.0)  # Dynamically changing
+
         # Add messages to MultiCraneMsg
         multi_crane_msgs.tower_crane_msgs.append(tower_crane_msg1)
         multi_crane_msgs.tower_crane_msgs.append(tower_crane_msg2)
         multi_crane_msgs.luffing_jib_crane_msgs.append(luffing_jib_crane_msg1)
+        multi_crane_msgs.luffing_jib_crane_msgs.append(luffing_jib_crane_msg2)
 
         # Publish the message
         self.publisher_.publish(multi_crane_msgs)
