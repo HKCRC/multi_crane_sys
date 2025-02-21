@@ -10,30 +10,21 @@ from multi_crane_msg.msg import MultiCraneMsg, TowerCraneMsg, LuffingJibCraneMsg
 
 
 class TowerCrane:
-    def __init__(self, id, type, crane_x, crane_y, crane_z, boom_length,boom_angle,trolley_radius,hook_height):
+    def __init__(self, tower_crane_msg):
         """
         Initialize a tower crane.
         
-        :param id: Unique identifier for the crane.
-        :param type: type for the crane.
-        :param crane_x: X-coordinate of the crane's base.
-        :param crane_y: Y-coordinate of the crane's base.
-        :param crane_z: Z-coordinate of the crane's base.
-        :param boom_length: boom_length of the crane.
-        :param boom_angle : boom_angle  of the crane.
-        :param trolley_radius: trolley_radius of the crane.
-        :param hook_height: hook_height of the crane.
         """
-        self.crane_id = id
-        self.crane_type = type
-        self.crane_x = crane_x
-        self.crane_y = crane_y
-        self.crane_z = crane_z
-        self.boom_length = boom_length
+        self.crane_id = tower_crane_msg.crane_id
+        self.crane_type = tower_crane_msg.crane_type
+        self.crane_x = tower_crane_msg.crane_x
+        self.crane_y = tower_crane_msg.crane_y
+        self.crane_z = tower_crane_msg.crane_z
+        self.boom_length = tower_crane_msg.boom_length
         
-        self.boom_angle  = boom_angle
-        self.trolley_radius = trolley_radius
-        self.hook_height = hook_height
+        self.boom_angle  = tower_crane_msg.boom_angle
+        self.trolley_radius = tower_crane_msg.trolley_radius
+        self.hook_height = tower_crane_msg.hook_height
 
         self.boom_end_x = None
         self.boom_end_y = None
@@ -53,7 +44,7 @@ class TowerCrane:
         """
         xx
 
-        :
+        :id, type, crane_x, crane_y, crane_z, boom_length,boom_horAngle,boom_verAngle,hook_height
         """
         self.boom_end_x = self.crane_x  + self.boom_length*math.cos(self.boom_angle)
         self.boom_end_y = self.crane_y  + self.boom_length*math.sin(self.boom_angle)
@@ -68,16 +59,21 @@ class TowerCrane:
         # self.hook_z = self.hook_height
         self.hook_z = self.trolley_z - self.hook_height
 
-    def update_state(self, boom_angle=None, trolley_radius=None, hook_height=None):
+    def tower_crane_update_state(self, tower_crane_msg):
         """
         update states for tower crane.
         """
-        if boom_angle is not None:
-            self.boom_angle = boom_angle
-        if trolley_radius is not None:
-            self.trolley_radius = trolley_radius
-        if hook_height is not None:
-            self.hook_height = hook_height
+        self.crane_id = tower_crane_msg.crane_id
+        self.crane_type = tower_crane_msg.crane_type
+        self.crane_x = tower_crane_msg.crane_x
+        self.crane_y = tower_crane_msg.crane_y
+        self.crane_z = tower_crane_msg.crane_z
+        self.boom_length = tower_crane_msg.boom_length
+        
+        self.boom_angle  = tower_crane_msg.boom_angle
+        self.trolley_radius = tower_crane_msg.trolley_radius
+        self.hook_height = tower_crane_msg.hook_height
+        
         self.cylindricalCoor2cartesianCoor()
 
     def check_collision(self, other_crane):
@@ -91,27 +87,20 @@ class TowerCrane:
 
 
 class LuffingJibCrane:
-    def __init__(self, id, type, crane_x, crane_y, crane_z, boom_length,boom_horAngle,boom_verAngle,hook_height):
+    def __init__(self, luffing_jib_crane_msg):
         """
         Initialize a luffing jib crane.
-        
-        :param id: Unique identifier for the crane.
-        :param type: type for the crane.
-        :param crane_x: X-coordinate of the crane's base.
-        :param crane_y: Y-coordinate of the crane's base.
-        :param crane_z: Z-coordinate of the crane's base.
-        :param boom_length: boom_length of the crane.
         """
-        self.crane_id = id
-        self.crane_type = type
-        self.crane_x = crane_x
-        self.crane_y = crane_y
-        self.crane_z = crane_z
-        self.boom_length = boom_length
+        self.crane_id = luffing_jib_crane_msg.crane_id
+        self.crane_type = luffing_jib_crane_msg.crane_type
+        self.crane_x = luffing_jib_crane_msg.crane_x
+        self.crane_y = luffing_jib_crane_msg.crane_y
+        self.crane_z = luffing_jib_crane_msg.crane_z
+        self.boom_length = luffing_jib_crane_msg.boom_length
         
-        self.boom_horAngle = boom_horAngle
-        self.boom_verAngle = boom_verAngle
-        self.hook_height = hook_height
+        self.boom_horAngle = luffing_jib_crane_msg.boom_hor_angle
+        self.boom_verAngle = luffing_jib_crane_msg.boom_ver_angle
+        self.hook_height = luffing_jib_crane_msg.hook_height
 
         self.boom_end_x = None
         self.boom_end_y = None
@@ -137,15 +126,20 @@ class LuffingJibCrane:
         self.hook_y = self.boom_end_y  
         self.hook_z = self.boom_end_z - self.hook_height
     
-    def update_state(self, boom_horAngle=None, boom_verAngle=None, hook_height=None):
+    def lj_crane_update_state(self, luffing_jib_crane_msg):
         """
         """
-        if boom_horAngle is not None:
-            self.boom_horAngle = boom_horAngle
-        if boom_verAngle is not None:
-            self.boom_verAngle = boom_verAngle
-        if hook_height is not None:
-            self.hook_height = hook_height
+        self.crane_id = luffing_jib_crane_msg.crane_id
+        self.crane_type = luffing_jib_crane_msg.crane_type
+        self.crane_x = luffing_jib_crane_msg.crane_x
+        self.crane_y = luffing_jib_crane_msg.crane_y
+        self.crane_z = luffing_jib_crane_msg.crane_z
+        self.boom_length = luffing_jib_crane_msg.boom_length
+        
+        self.boom_horAngle = luffing_jib_crane_msg.boom_hor_angle
+        self.boom_verAngle = luffing_jib_crane_msg.boom_ver_angle
+        self.hook_height = luffing_jib_crane_msg.hook_height
+
         self.cylindricalCoor2cartesianCoor()
 
 
@@ -161,7 +155,7 @@ class CraneSwarm:
         self.ax1 = self.fig.add_subplot(131, projection='3d')  # 3D View
         self.ax2 = self.fig.add_subplot(132)  # Front View (2D)
         self.ax3 = self.fig.add_subplot(133)  # Top View (2D)
-        self.visualize_all()
+        self.update_visualization()
 
     def add_crane(self, crane):
         """
@@ -172,13 +166,16 @@ class CraneSwarm:
         self.cranes.append(crane)
         self.cranes_id.append(crane.crane_id)
     
-    def update_crane_state(self, crane_id, **kwargs):
+    def update_crane_state(self, crane_msg):
         """
         Update the state of a specific crane and refresh the visualization.
         """
         for crane in self.cranes:
-            if crane.crane_id == crane_id:
-                crane.update_state(**kwargs)
+            if crane.crane_id == crane_msg.crane_id:
+                if crane.crane_type == "towerCrane":
+                    crane.tower_crane_update_state(crane_msg)
+                elif crane.crane_type == "luffingJibCrane":
+                    crane.lj_crane_update_state(crane_msg)
                 break
         self.update_visualization()
 
@@ -254,11 +251,11 @@ class CraneSwarm:
         ax.scatter(crane.hook_x, crane.hook_z, color='purple')
 
     def visualize_lj_crane_top_view(self,crane,ax):
-        # boom_length_projection = crane.boom_length*math.cos(crane.boom_verAngle)
+        boom_length_projection = crane.boom_length*math.cos(crane.boom_verAngle)
 
         ax.scatter(crane.crane_x, crane.crane_y, color='blue')
         ax.plot([crane.crane_x, crane.boom_end_x], [crane.crane_y, crane.boom_end_y], color='green')
-        circle = plt.Circle((crane.crane_x, crane.crane_y), crane.boom_length, color='red', linestyle='--',fill=False)
+        circle = plt.Circle((crane.crane_x, crane.crane_y), boom_length_projection, color='red', linestyle='--',fill=False)
         plt.gca().add_patch(circle)
         plt.text(crane.crane_x, crane.crane_y, f"Crane {crane.crane_id}", fontsize=8, ha='center')
 
@@ -325,21 +322,21 @@ class CraneSwarm:
         ax.set_title("Top View (2D)")
 
     
-    def visualize_all(self):
-        """
-        Visualize all three views (3D, front view, top view) in the same figure.
-        """
-        # 3D View
-        self.visualize_3d(self.ax1)
+    # def visualize_all(self):
+    #     """
+    #     Visualize all three views (3D, front view, top view) in the same figure.
+    #     """
+    #     # 3D View
+    #     self.visualize_3d(self.ax1)
 
-        # Front View (2D)
-        self.visualize_front_view(self.ax2)
+    #     # Front View (2D)
+    #     self.visualize_front_view(self.ax2)
 
-        # Top View (2D)
-        self.visualize_top_view(self.ax3)
+    #     # Top View (2D)
+    #     self.visualize_top_view(self.ax3)
 
-        plt.tight_layout()
-        plt.show(block=False)
+    #     plt.tight_layout()
+    #     plt.show(block=False)
 
     def check_all_collisions(self):
         """
@@ -367,59 +364,40 @@ class MultiCraneSubscriber(Node):
         global crane_swarm
 
         # parse TowerCraneMsg array
-        for tower_crane in msg.tower_crane_msgs:
+        for tower_crane_msg in msg.tower_crane_msgs:
             self.get_logger().info(
-                f'Tower Crane ID: {tower_crane.crane_id}, '
-                f'Type: {tower_crane.crane_type}, '
-                f'Position: ({tower_crane.crane_x}, {tower_crane.crane_y}, {tower_crane.crane_z}), '
-                f'Boom Length: {tower_crane.boom_length}, '
-                f'Boom Angle: {tower_crane.boom_angle}, '
-                f'Trolley Radius: {tower_crane.trolley_radius}, '
-                f'Hook Height: {tower_crane.hook_height}'
+                f'Tower Crane ID: {tower_crane_msg.crane_id}, '
+                f'Type: {tower_crane_msg.crane_type}, '
+                f'Position: ({tower_crane_msg.crane_x}, {tower_crane_msg.crane_y}, {tower_crane_msg.crane_z}), '
+                f'Boom Length: {tower_crane_msg.boom_length}, '
+                f'Boom Angle: {tower_crane_msg.boom_angle}, '
+                f'Trolley Radius: {tower_crane_msg.trolley_radius}, '
+                f'Hook Height: {tower_crane_msg.hook_height}'
             )
-            if tower_crane.crane_id in crane_swarm.cranes_id:
-                crane_swarm.update_crane_state(tower_crane.crane_id, boom_angle=tower_crane.boom_angle, \
-                trolley_radius=tower_crane.trolley_radius, hook_height=tower_crane.hook_height)
+            if tower_crane_msg.crane_id in crane_swarm.cranes_id:
+                crane_swarm.update_crane_state(tower_crane_msg)
             else:
                 # create a crane if there doesn't exists 
-                new_tower_crane = TowerCrane(id=tower_crane.crane_id, type = tower_crane.crane_type, \
-                          crane_x= tower_crane.crane_x, crane_y=tower_crane.crane_y, crane_z=tower_crane.crane_z,  \
-                          boom_length=tower_crane.boom_length, boom_angle= tower_crane.boom_angle, \
-                          trolley_radius= tower_crane.trolley_radius, hook_height =tower_crane.hook_height)
+                new_tower_crane = TowerCrane(tower_crane_msg)
                 crane_swarm.add_crane(new_tower_crane)
             
-
-
         # parse LuffingJibCraneMsg array
-        for luffing_jib_crane in msg.luffing_jib_crane_msgs:
+        for lj_crane_msg in msg.luffing_jib_crane_msgs:
             # for debug
             self.get_logger().info(
-                f'Luffing Jib Crane ID: {luffing_jib_crane.crane_id}, '
-                f'Type: {luffing_jib_crane.crane_type}, '
-                f'Position: ({luffing_jib_crane.crane_x}, {luffing_jib_crane.crane_y}, {luffing_jib_crane.crane_z}), '
-                f'Boom Length: {luffing_jib_crane.boom_length}, '
-                f'Boom Horizontal Angle: {luffing_jib_crane.boom_hor_angle}, '
-                f'Boom Vertical Angle: {luffing_jib_crane.boom_ver_angle}, '
-                f'Hook Height: {luffing_jib_crane.hook_height}'
+                f'Luffing Jib Crane ID: {lj_crane_msg.crane_id}, '
+                f'Type: {lj_crane_msg.crane_type}, '
+                f'Position: ({lj_crane_msg.crane_x}, {lj_crane_msg.crane_y}, {lj_crane_msg.crane_z}), '
+                f'Boom Length: {lj_crane_msg.boom_length}, '
+                f'Boom Horizontal Angle: {lj_crane_msg.boom_hor_angle}, '
+                f'Boom Vertical Angle: {lj_crane_msg.boom_ver_angle}, '
+                f'Hook Height: {lj_crane_msg.hook_height}'
             )
-            if luffing_jib_crane.crane_id in crane_swarm.cranes_id:
-                crane_swarm.update_crane_state(luffing_jib_crane.crane_id, boom_horAngle=luffing_jib_crane.boom_hor_angle, \
-                    boom_verAngle=luffing_jib_crane.boom_ver_angle, hook_height=luffing_jib_crane.hook_height)
+            if lj_crane_msg.crane_id in crane_swarm.cranes_id:
+                crane_swarm.update_crane_state(lj_crane_msg)
             else:
                 # create a crane if there doesn't exists 
-                id = luffing_jib_crane.crane_id
-                type = luffing_jib_crane.crane_type
-                crane_x = luffing_jib_crane.crane_x
-                crane_y =luffing_jib_crane.crane_y
-                crane_z = luffing_jib_crane.crane_z
-                boom_length = luffing_jib_crane.boom_length
-                boom_hor_angle = luffing_jib_crane.boom_hor_angle
-                boom_ver_angle = luffing_jib_crane.boom_ver_angle
-                hook_height = luffing_jib_crane.hook_height
-
-                new_lj_crane = LuffingJibCrane(id=id, type = type, crane_x= crane_x, crane_y=crane_y, crane_z=crane_z,  \
-                          boom_length = boom_length, boom_horAngle= boom_hor_angle, \
-                          boom_verAngle= boom_ver_angle, hook_height =hook_height)
+                new_lj_crane = LuffingJibCrane(lj_crane_msg)
                 crane_swarm.add_crane(new_lj_crane) 
             
 
@@ -436,55 +414,41 @@ def signal_handler(sig, frame):
 def main(args=None):
     # Register the signal handler for Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
+    
+    # Create a towerCrane message
+    tower_crane_msg = TowerCraneMsg()
+    tower_crane_msg.crane_id = 1
+    tower_crane_msg.crane_type = "towerCrane"
+    tower_crane_msg.crane_x = 20.0
+    tower_crane_msg.crane_y = 30.0
+    tower_crane_msg.crane_z = 50.0
+    tower_crane_msg.boom_length = 25.0
+    tower_crane_msg.boom_angle = 45.0 # Dynamically changing
+    tower_crane_msg.trolley_radius = 16.3  # Dynamically changing
+    tower_crane_msg.hook_height = 10.7  # Dynamically changing
+
+    # Create a LuffingJibCrane message
+    luffing_jib_crane_msg = LuffingJibCraneMsg()
+    luffing_jib_crane_msg.crane_id = 4
+    luffing_jib_crane_msg.crane_type = "luffingJibCrane"
+    luffing_jib_crane_msg.crane_x = 66.0
+    luffing_jib_crane_msg.crane_y = 52.0
+    luffing_jib_crane_msg.crane_z = 45.0
+    luffing_jib_crane_msg.boom_length = 18.4
+    luffing_jib_crane_msg.boom_hor_angle = 50.0 # Dynamically changing
+    luffing_jib_crane_msg.boom_ver_angle = 60.0 # Dynamically changing
+    luffing_jib_crane_msg.hook_height = 10.2  # Dynamically changing
 
     # Create cranes
-    crane1 = TowerCrane(id=1, type = 'towerCrane', crane_x=20, crane_y=30, crane_z=50,  boom_length=25, boom_angle= math.radians(30), trolley_radius= 5, hook_height =5)
-    crane2 = TowerCrane(id=2, type = 'towerCrane', crane_x=40, crane_y=50, crane_z=40,  boom_length=15, boom_angle= math.radians(60), trolley_radius= 5, hook_height =5)
-    crane3 = LuffingJibCrane(id=3, type = 'luffingJibCrane', crane_x=60, crane_y=20, crane_z=20,  boom_length=20, boom_horAngle= math.radians(30), boom_verAngle= math.radians(60), hook_height =15)
-
+    crane1 = TowerCrane(tower_crane_msg)
+    crane2 = LuffingJibCrane(luffing_jib_crane_msg)
+   
     # Add cranes to crane_swarm
     global crane_swarm
     crane_swarm = CraneSwarm()
     crane_swarm.add_crane(crane1)
     crane_swarm.add_crane(crane2)
-    crane_swarm.add_crane(crane3)
-    crane_swarm.visualize_all()
-
-    ##  munual input to test
-    # while True:
-    #     try:
-    #         data_source = str(input("Choose visual collision data source (keyboard or ros): "))
-    #         if data_source == "ros":
-    #             # create a ros2 node for subscriber. subscriber contains the information
-    #             # to update crane states
-    #             rclpy.init(args=args)
-    #             multi_crane_subscriber = MultiCraneSubscriber()
-    #             rclpy.spin(multi_crane_subscriber)
-    #             # Destroy the node explicitly (optional - otherwise it will be done automatically
-    #             # when the garbage collector destroys the node object)
-    #             multi_crane_subscriber.destroy_node()
-    #             rclpy.shutdown()
-
-    #         elif data_source == "keyboard":
-    #             crane_id = int(input(f"Enter crane ID to update ({crane_swarm.cranes_id}): "))
-    #             for crane in crane_swarm.cranes:
-    #                 if crane.crane_id == crane_id:
-    #                     if crane.crane_type == 'towerCrane':
-    #                         boom_angle = math.radians(float(input("Enter boom angle (degrees): ")))
-    #                         trolley_radius = float(input("Enter trolley radius: "))
-    #                         hook_height = float(input("Enter hook height: "))
-    #                         crane_swarm.update_crane_state(crane_id, boom_angle=boom_angle, trolley_radius=trolley_radius, hook_height=hook_height)
-    #                     elif crane.crane_type == 'luffingJibCrane':
-    #                         boom_horAngle = math.radians(float(input("Enter boom horizontal angle (degrees): ")))
-    #                         boom_verAngle = math.radians(float(input("Enter boom vertical angle (degrees): ")))
-    #                         hook_height = float(input("Enter hook height: "))
-    #                         crane_swarm.update_crane_state(crane_id, boom_horAngle=boom_horAngle, boom_verAngle=boom_verAngle, hook_height=hook_height)
-                
-    #     except ValueError:
-    #         print("Invalid input. Please try again.")
-    #     except KeyboardInterrupt:
-    #         # Handle Ctrl+C explicitly
-    #         signal_handler(None, None)
+    crane_swarm.update_visualization()
 
     # create a ros2 node for subscriber. subscriber contains the information
     # to update crane states
@@ -495,9 +459,6 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     multi_crane_subscriber.destroy_node()
     rclpy.shutdown()
-
-
-
 
 
 if __name__ == '__main__':
