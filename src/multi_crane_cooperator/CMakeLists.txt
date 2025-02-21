@@ -21,12 +21,15 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(multi_crane_msg REQUIRED)
 
+find_package(yaml-cpp REQUIRED)
+
 add_executable(test_collision_check src/test_collision_check.cpp)
 target_include_directories(test_collision_check PUBLIC
   include
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 ament_target_dependencies(test_collision_check rclcpp std_msgs multi_crane_msg)
+target_link_libraries(test_collision_check yaml-cpp)
 
 install(TARGETS test_collision_check
   DESTINATION lib/${PROJECT_NAME})

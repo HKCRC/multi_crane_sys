@@ -8,6 +8,7 @@
 #include <thread>
 #include <termios.h>
 #include <unistd.h>
+#include <yaml-cpp/yaml.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -66,10 +67,10 @@ void keyboardListener()
             luffing_crane_list[0].jib_angle -= 5.0f;
             break;
         case 'i': 
-            luffing_crane_list[0].hoisting_height -= 5.0f;
+            luffing_crane_list[0].hoisting_height -= 1.0f;
             break;
         case 'k':
-            luffing_crane_list[0].hoisting_height += 5.0f;
+            luffing_crane_list[0].hoisting_height += 1.0f;
             break;
         case '4':
             tower_crane_list[0].slewing_angle += 5.0f;
@@ -78,16 +79,16 @@ void keyboardListener()
             tower_crane_list[0].slewing_angle -= 5.0f;
             break;
         case '8': 
-            tower_crane_list[0].trolley_radius += 5.0f;
+            tower_crane_list[0].trolley_radius += 1.0f;
             break;
         case '2':
-            tower_crane_list[0].trolley_radius -= 5.0f;
+            tower_crane_list[0].trolley_radius -= 1.0f;
             break;
         case '-': 
-            tower_crane_list[0].hoisting_height -= 5.0f;
+            tower_crane_list[0].hoisting_height -= 1.0f;
             break;
         case '+':
-            tower_crane_list[0].hoisting_height += 5.0f;
+            tower_crane_list[0].hoisting_height += 1.0f;
             break;
         default:
             std::cout << "Invalid input" << std::endl;
@@ -97,40 +98,92 @@ void keyboardListener()
   }
 }
 
+bool loadConfigFile(std::string file_name)
+{
+  YAML::Node config = YAML::LoadFile(file_name);
+
+  if(!config)
+  {
+    std::cout<<"Open config file: "<<file_name<<" failed"<<std::endl;
+    return false;
+  }
+  
+  if(config["luffing_cranes"])
+  {
+    LuffingJibCraneConfig ljc;
+    for(const auto& crane : config["luffing_cranes"])
+    {
+      ljc.x = crane["parameters"]["x"].as<double>();
+      ljc.y = crane["parameters"]["y"].as<double>();
+      ljc.h = crane["parameters"]["h"].as<double>();
+      ljc.d = crane["parameters"]["d"].as<double>();
+      ljc.jib_length = crane["parameters"]["jib_length"].as<double>();
+      ljc.slewing_angle = 0;
+      ljc.jib_angle = 0;
+      ljc.hoisting_height = ljc.h;
+
+      luffing_crane_list.push_back(ljc);
+    }
+  }
+
+  if(config["tower_cranes"])
+  {
+    TowerCraneConfig tc;
+    for(const auto& crane : config["tower_cranes"])
+    {
+      tc.x = crane["parameters"]["x"].as<double>();
+      tc.y = crane["parameters"]["y"].as<double>();
+      tc.h = crane["parameters"]["h"].as<double>();
+      tc.jib_length = crane["parameters"]["jib_length"].as<double>();
+      tc.slewing_angle = 0;
+      tc.trolley_radius = tc.jib_length;
+      tc.hoisting_height = tc.h;
+
+      tower_crane_list.push_back(tc);
+    }
+  }
+
+  return true;
+}
 
 int main(int argc, char ** argv)
 {
+  if (argc < 2) 
+  {
+        std::cerr << "Usage: " << argv[0] << " <path_to_param_file>\n";
+        return 1;
+  }
+
+  std::string paramFilePath = (std::string) argv[1];
+
+  if(loadConfigFile(paramFilePath) == false)
+  {
+    return 1;
+  }
+
   rclcpp::init(argc, argv);
 
   auto node = rclcpp::Node::make_shared("test");
 
   rclcpp::Publisher<multi_crane_msg::msg::MultiCraneMsg>::SharedPtr publisher = node->create_publisher<multi_crane_msg::msg::MultiCraneMsg>("multi_crane", 10);
 
-  LuffingJibCraneConfig ljc = {0, 0, 40, 0, 50, 0, 0, 0};
-  luffing_crane_list.push_back(ljc);
-
-  TowerCraneConfig tc = {80, 0, 40, 50, 0, 0, 0};
-  tower_crane_list.push_back(tc);
-
-  // initiate joint status
-  luffing_crane_list[0].slewing_angle = 0;
-  luffing_crane_list[0].jib_angle = 0;
-  luffing_crane_list[0].hoisting_height = 40;
-
-  tower_crane_list[0].slewing_angle = 90;
-  tower_crane_list[0].trolley_radius = 50;
-  tower_crane_list[0].hoisting_height = 40;
-
   std::unique_ptr<std::thread> thread_input = std::make_unique<std::thread>(&keyboardListener); // using keyboard to control crane status
 
-
+  long int cnt = 0;
   while (rclcpp::ok())
   {
     rclcpp::spin_some(node);
 
+    // update the joint state of cranes
+
     // call check_collision function
     if(checkCollisionBetweenMixCranes(luffing_crane_list[0], tower_crane_list[0], 4.0))
-      std::cout<<"With the risk of collision"<<std::endl;
+    {
+      std::cout<<"The time of collision: "<< cnt++ <<std::endl;
+    }
+    else
+      cnt = 0;
+      
 
     // send data to UI to show animation
     auto msg = multi_crane_msg::msg::MultiCraneMsg();

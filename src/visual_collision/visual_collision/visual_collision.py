@@ -280,9 +280,9 @@ class CraneSwarm:
             elif crane.crane_type == "luffingJibCrane":
                 self.visualize_luffing_jib_crane_3D(crane,ax)
 
-        ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
-        ax.set_zlim(0, 100)
+        # ax.set_xlim(0, 100)
+        # ax.set_ylim(0, 100)
+        # ax.set_zlim(0, 100)
         ax.set_xlabel("X Position (m)")
         ax.set_ylabel("Y Position (m)")
         ax.set_zlabel("Height (m)")
@@ -299,8 +299,8 @@ class CraneSwarm:
             elif crane.crane_type == "luffingJibCrane":
                 self.visualize_lj_crane_front_view(crane,ax)
 
-        ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
+        # ax.set_xlim(0, 100)
+        # ax.set_ylim(0, 100)
         ax.set_xlabel("X Position (m)")
         ax.set_ylabel("Height (m)")
         ax.set_title("Front View (2D)")
@@ -315,8 +315,8 @@ class CraneSwarm:
                 self.visualize_tower_crane_top_view(crane,ax)
             elif crane.crane_type == "luffingJibCrane":
                 self.visualize_lj_crane_top_view(crane,ax)
-        ax.set_xlim(0, 100)
-        ax.set_ylim(0, 100)
+        # ax.set_xlim(0, 100)
+        # ax.set_ylim(0, 100)
         ax.set_xlabel("X Position (m)")
         ax.set_ylabel("Y Position (m)")
         ax.set_title("Top View (2D)")
