@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <thread>
 #include <termios.h>
@@ -66,29 +67,47 @@ void keyboardListener()
         case 's':
             luffing_crane_list[0].jib_angle -= 5.0f;
             break;
-        case 'i': 
+        case 'r': 
             luffing_crane_list[0].hoisting_height -= 1.0f;
             break;
-        case 'k':
+        case 'f':
             luffing_crane_list[0].hoisting_height += 1.0f;
             break;
+        case 'h':
+            luffing_crane_list[1].slewing_angle += 5.0f;
+            break;
+        case 'k':
+            luffing_crane_list[1].slewing_angle -= 5.0f;
+            break;
+        case 'u': 
+            luffing_crane_list[1].jib_angle += 5.0f;
+            break;
+        case 'j':
+            luffing_crane_list[1].jib_angle -= 5.0f;
+            break;
+        case 'o': 
+            luffing_crane_list[1].hoisting_height -= 1.0f;
+            break;
+        case 'l':
+            luffing_crane_list[1].hoisting_height += 1.0f;
+            break;
         case '4':
-            tower_crane_list[0].slewing_angle += 5.0f;
+            luffing_crane_list[3].slewing_angle += 5.0f;
             break;
         case '6':
-            tower_crane_list[0].slewing_angle -= 5.0f;
+            luffing_crane_list[3].slewing_angle -= 5.0f;
             break;
         case '8': 
-            tower_crane_list[0].trolley_radius += 1.0f;
+            luffing_crane_list[3].jib_angle += 5.0f;
             break;
         case '2':
-            tower_crane_list[0].trolley_radius -= 1.0f;
+            luffing_crane_list[3].jib_angle -= 5.0f;
             break;
         case '-': 
-            tower_crane_list[0].hoisting_height -= 1.0f;
+            luffing_crane_list[3].hoisting_height -= 1.0f;
             break;
         case '+':
-            tower_crane_list[0].hoisting_height += 1.0f;
+            luffing_crane_list[3].hoisting_height += 1.0f;
             break;
         default:
             std::cout << "Invalid input" << std::endl;
@@ -204,18 +223,20 @@ int main(int argc, char ** argv)
     rclcpp::spin_some(node);
 
     // update the joint state of cranes
+    std::cout<<"----------iterator: "<< cnt++ << ", distance between cranes---------"<< std::endl;
 
     // call check_collision function
+    double dist;
     for(int i = 0; i < luffing_crane_list.size(); i++)
-      for(int j = i+1; j < luffing_crane_list.size(); j++)
+    {
+      std::cout<< "crane " << i+1 << ": ";
+      for(int j = 0; j < luffing_crane_list.size(); j++)
       {
-        if(checkCollisionBetweenMixCranes(luffing_crane_list[i], tower_crane_list[j], 4.0))
-        {
-          std::cout<<"Warnning: "<< cnt++ << ", CRANE "<< i+1 << " & " << "CRANE " << j+1 <<std::endl;
-        }
-        else
-          cnt = 0;
+        dist = checkCollisionBetweenLJCs(luffing_crane_list[i], luffing_crane_list[j]);
+        std::cout<< std::fixed << std::setprecision(3) << dist << "\t";
       }
+      std::cout<<std::endl;
+    }
       
 
     // send data to UI to show animation

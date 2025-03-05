@@ -192,7 +192,7 @@ class CraneSwarm:
         self.visualize_top_view(self.ax3)
 
         plt.draw()
-        plt.pause(0.1)
+        plt.pause(0.001)
 
     def visualize_tower_crane_3D(self,crane,ax):
         # Plot the base of the crane
@@ -355,7 +355,7 @@ class MultiCraneSubscriber(Node):
             MultiCraneMsg,
             'multi_crane',
             self.listener_callback,
-            10)
+            1)
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
@@ -365,15 +365,15 @@ class MultiCraneSubscriber(Node):
 
         # parse TowerCraneMsg array
         for tower_crane_msg in msg.tower_crane_msgs:
-            self.get_logger().info(
-                f'Tower Crane ID: {tower_crane_msg.crane_id}, '
-                f'Type: {tower_crane_msg.crane_type}, '
-                f'Position: ({tower_crane_msg.crane_x}, {tower_crane_msg.crane_y}, {tower_crane_msg.crane_z}), '
-                f'Boom Length: {tower_crane_msg.boom_length}, '
-                f'Boom Angle: {tower_crane_msg.boom_angle}, '
-                f'Trolley Radius: {tower_crane_msg.trolley_radius}, '
-                f'Hook Height: {tower_crane_msg.hook_height}'
-            )
+            # self.get_logger().info(
+            #     f'Tower Crane ID: {tower_crane_msg.crane_id}, '
+            #     f'Type: {tower_crane_msg.crane_type}, '
+            #     f'Position: ({tower_crane_msg.crane_x}, {tower_crane_msg.crane_y}, {tower_crane_msg.crane_z}), '
+            #     f'Boom Length: {tower_crane_msg.boom_length}, '
+            #     f'Boom Angle: {tower_crane_msg.boom_angle}, '
+            #     f'Trolley Radius: {tower_crane_msg.trolley_radius}, '
+            #     f'Hook Height: {tower_crane_msg.hook_height}'
+            # )
             if tower_crane_msg.crane_id in crane_swarm.cranes_id:
                 crane_swarm.update_crane_state(tower_crane_msg)
             else:
@@ -384,15 +384,15 @@ class MultiCraneSubscriber(Node):
         # parse LuffingJibCraneMsg array
         for lj_crane_msg in msg.luffing_jib_crane_msgs:
             # for debug
-            self.get_logger().info(
-                f'Luffing Jib Crane ID: {lj_crane_msg.crane_id}, '
-                f'Type: {lj_crane_msg.crane_type}, '
-                f'Position: ({lj_crane_msg.crane_x}, {lj_crane_msg.crane_y}, {lj_crane_msg.crane_z}), '
-                f'Boom Length: {lj_crane_msg.boom_length}, '
-                f'Boom Horizontal Angle: {lj_crane_msg.boom_hor_angle}, '
-                f'Boom Vertical Angle: {lj_crane_msg.boom_ver_angle}, '
-                f'Hook Height: {lj_crane_msg.hook_height}'
-            )
+            # self.get_logger().info(
+            #     f'Luffing Jib Crane ID: {lj_crane_msg.crane_id}, '
+            #     f'Type: {lj_crane_msg.crane_type}, '
+            #     f'Position: ({lj_crane_msg.crane_x}, {lj_crane_msg.crane_y}, {lj_crane_msg.crane_z}), '
+            #     f'Boom Length: {lj_crane_msg.boom_length}, '
+            #     f'Boom Horizontal Angle: {lj_crane_msg.boom_hor_angle}, '
+            #     f'Boom Vertical Angle: {lj_crane_msg.boom_ver_angle}, '
+            #     f'Hook Height: {lj_crane_msg.hook_height}'
+            # )
             if lj_crane_msg.crane_id in crane_swarm.cranes_id:
                 crane_swarm.update_crane_state(lj_crane_msg)
             else:

@@ -186,7 +186,7 @@ double calculateMinimalDistance(const Segment3D& jib_seg1, const Segment3D& hook
     return min_dist;
 }
 
-bool checkCollisionBetweenLJCs(const LuffingJibCraneConfig& crane1,const LuffingJibCraneConfig& crane2, double threshold)
+double checkCollisionBetweenLJCs(const LuffingJibCraneConfig& crane1,const LuffingJibCraneConfig& crane2)
 {
     // obtain the position of the jib and the hook
     Segment3D jib_seg1, hook_seg1, jib_seg2, hook_seg2;
@@ -197,13 +197,14 @@ bool checkCollisionBetweenLJCs(const LuffingJibCraneConfig& crane1,const Luffing
 
     double distance =  calculateMinimalDistance(jib_seg1, hook_seg1, jib_seg2, hook_seg2);
 
-    if(distance < threshold)
-        return true;
-    else
-        return false;
+    return distance;
+    // if(distance < threshold)
+    //     return true;
+    // else
+    //     return false;
 }
 
-bool checkCollisionBetweenTCs(const TowerCraneConfig& crane1, const TowerCraneConfig& crane2, double threshold)
+double checkCollisionBetweenTCs(const TowerCraneConfig& crane1, const TowerCraneConfig& crane2)
 {
     // obtain the position of the jib and the hook
     Segment3D jib_seg1, hook_seg1, jib_seg2, hook_seg2;
@@ -214,13 +215,14 @@ bool checkCollisionBetweenTCs(const TowerCraneConfig& crane1, const TowerCraneCo
 
     double distance =  calculateMinimalDistance(jib_seg1, hook_seg1, jib_seg2, hook_seg2);
 
-    if(distance < threshold)
-        return true;
-    else
-        return false;
+    // if(distance < threshold)
+    //     return true;
+    // else
+    //     return false;
+    return distance;
 }
 
-bool checkCollisionBetweenMixCranes(const LuffingJibCraneConfig& crane1, const TowerCraneConfig& crane2, double threshold)
+double checkCollisionBetweenMixCranes(const LuffingJibCraneConfig& crane1, const TowerCraneConfig& crane2)
 {
         // obtain the position of the jib and the hook
     Segment3D jib_seg1, hook_seg1, jib_seg2, hook_seg2;
@@ -231,10 +233,11 @@ bool checkCollisionBetweenMixCranes(const LuffingJibCraneConfig& crane1, const T
 
     double distance =  calculateMinimalDistance(jib_seg1, hook_seg1, jib_seg2, hook_seg2);
 
-    if(distance < threshold)
-        return true;
-    else
-        return false;
+    // if(distance < threshold)
+    //     return true;
+    // else
+    //     return false;
+    return distance;
 }
 
 #endif
