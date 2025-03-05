@@ -1,19 +1,31 @@
 luffing_cranes:
   - parameters:
+      x: 63.43
+      y: 4.48
+      h: 40.0
+      d: 0.0
+      jib_length: 50.0
+  - parameters:
       x: 0.0
       y: 0.0
       h: 40.0
       d: 0.0
       jib_length: 50.0
   - parameters:
-      x: 100.0
-      y: 100.0
+      x: 92.59
+      y: 69.91
       h: 40.0
       d: 0.0
-      jib_length: 50.0
-tower_cranes:
+      jib_length: 45.0
   - parameters:
-      x: 80.0
-      y: 0.0
+      x: 45.22
+      y: 67.13
       h: 40.0
-      jib_length: 50.0
+      d: 0.0
+      jib_length: 45.0
+# tower_cranes:
+#   - parameters:
+#       x: 80.0
+#       y: 0.0
+#       h: 40.0
+#       jib_length: 50.0

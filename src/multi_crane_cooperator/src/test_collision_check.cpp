@@ -146,6 +146,35 @@ bool loadConfigFile(std::string file_name)
   return true;
 }
 
+void pushLuffingJibCraneMsg(const LuffingJibCraneConfig& config, int craneID, multi_crane_msg::msg::MultiCraneMsg &msg)
+{
+  auto lj_msg = multi_crane_msg::msg::LuffingJibCraneMsg();
+  lj_msg.crane_id = craneID;
+  lj_msg.crane_type = "luffingJibCrane";
+  lj_msg.crane_x = config.x;
+  lj_msg.crane_y = config.y;
+  lj_msg.crane_z = config.h;
+  lj_msg.boom_length = config.jib_length;
+  lj_msg.boom_hor_angle = config.slewing_angle / 180 * M_PI;
+  lj_msg.boom_ver_angle = config.jib_angle / 180 * M_PI;
+  lj_msg.hook_height = config.hoisting_height;
+  msg.luffing_jib_crane_msgs.push_back(lj_msg);
+}
+void pushTowerCraneMsg(const TowerCraneConfig& config, int craneID, multi_crane_msg::msg::MultiCraneMsg &msg)
+{
+  auto tc_msg = multi_crane_msg::msg::TowerCraneMsg();
+  tc_msg.crane_id = craneID;
+  tc_msg.crane_type = "towerCrane";
+  tc_msg.crane_x = config.x;
+  tc_msg.crane_y = config.y;
+  tc_msg.crane_z = config.h;
+  tc_msg.boom_length = config.jib_length;
+  tc_msg.boom_angle = config.slewing_angle / 180 * M_PI;
+  tc_msg.trolley_radius = config.trolley_radius;
+  tc_msg.hook_height = config.hoisting_height;
+  msg.tower_crane_msgs.push_back(tc_msg);
+}
+
 int main(int argc, char ** argv)
 {
   if (argc < 2) 
@@ -177,39 +206,24 @@ int main(int argc, char ** argv)
     // update the joint state of cranes
 
     // call check_collision function
-    if(checkCollisionBetweenMixCranes(luffing_crane_list[0], tower_crane_list[0], 4.0))
-    {
-      std::cout<<"The time of collision: "<< cnt++ <<std::endl;
-    }
-    else
-      cnt = 0;
+    for(int i = 0; i < luffing_crane_list.size(); i++)
+      for(int j = i+1; j < luffing_crane_list.size(); j++)
+      {
+        if(checkCollisionBetweenMixCranes(luffing_crane_list[i], tower_crane_list[j], 4.0))
+        {
+          std::cout<<"Warnning: "<< cnt++ << ", CRANE "<< i+1 << " & " << "CRANE " << j+1 <<std::endl;
+        }
+        else
+          cnt = 0;
+      }
       
 
     // send data to UI to show animation
     auto msg = multi_crane_msg::msg::MultiCraneMsg();
-    auto tc_msg = multi_crane_msg::msg::TowerCraneMsg();
-    auto lj_msg = multi_crane_msg::msg::LuffingJibCraneMsg();
-    lj_msg.crane_id = 3;
-    lj_msg.crane_type = "luffingJibCrane";
-    lj_msg.crane_x = luffing_crane_list[0].x;
-    lj_msg.crane_y = luffing_crane_list[0].y;
-    lj_msg.crane_z = luffing_crane_list[0].h;
-    lj_msg.boom_length = luffing_crane_list[0].jib_length;
-    lj_msg.boom_hor_angle = luffing_crane_list[0].slewing_angle / 180 * M_PI;
-    lj_msg.boom_ver_angle = luffing_crane_list[0].jib_angle / 180 * M_PI;
-    lj_msg.hook_height = luffing_crane_list[0].hoisting_height;
-    msg.luffing_jib_crane_msgs.push_back(lj_msg);
-
-    tc_msg.crane_id = 2;
-    tc_msg.crane_type = "towerCrane";
-    tc_msg.crane_x = tower_crane_list[0].x;
-    tc_msg.crane_y = tower_crane_list[0].y;
-    tc_msg.crane_z = tower_crane_list[0].h;
-    tc_msg.boom_length = tower_crane_list[0].jib_length;
-    tc_msg.boom_angle = tower_crane_list[0].slewing_angle / 180 * M_PI;
-    tc_msg.trolley_radius = tower_crane_list[0].trolley_radius;
-    tc_msg.hook_height = tower_crane_list[0].hoisting_height;
-    msg.tower_crane_msgs.push_back(tc_msg);
+    for(int i = 0; i < luffing_crane_list.size(); i++)
+    {
+      pushLuffingJibCraneMsg(luffing_crane_list[i], i+1, msg);
+    }
 
     publisher->publish(msg);
     
