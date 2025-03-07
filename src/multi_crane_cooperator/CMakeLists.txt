@@ -21,18 +21,15 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(multi_crane_msg REQUIRED)
 
-find_package(yaml-cpp REQUIRED)
+add_subdirectory(cpp_crane_sys)
 
-add_executable(test_collision_check src/test_collision_check.cpp)
-target_include_directories(test_collision_check PUBLIC
-  include
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(test_collision_check rclcpp std_msgs multi_crane_msg)
-target_link_libraries(test_collision_check yaml-cpp)
+add_executable(ros_wrapper_tcp_node src/ros_wrapper_tcp_node.cpp)
+ament_target_dependencies(ros_wrapper_tcp_node rclcpp std_msgs multi_crane_msg)
+target_link_libraries(ros_wrapper_tcp_node multi_crane_sys)
 
-install(TARGETS test_collision_check
+install(TARGETS ros_wrapper_tcp_node
   DESTINATION lib/${PROJECT_NAME})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

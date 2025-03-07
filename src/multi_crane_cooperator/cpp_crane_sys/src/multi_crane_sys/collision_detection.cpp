@@ -15,9 +15,10 @@ bool CraneAntiCollision::loadConfigFile(std::string file_name)
     if (config["crane_list"])
     {
         CraneConfig crane_config;
+        int ljc_num = 0, tc_num = 0;
         for (const auto &crane : config["crane_list"])
         {
-            crane_config.type = crane["parameters"]["type"].as<u_char>();
+            crane_config.type = crane["parameters"]["type"].as<int>();
             crane_config.x = crane["parameters"]["x"].as<double>();
             crane_config.y = crane["parameters"]["y"].as<double>();
             crane_config.h = crane["parameters"]["h"].as<double>();
@@ -27,7 +28,12 @@ bool CraneAntiCollision::loadConfigFile(std::string file_name)
             crane_config.trolley_radius_jib_angle = 0;
             crane_config.hoisting_height = crane_config.h;
             crane_list_.push_back(crane_config);
+            if(crane_config.type == 0)
+                ljc_num++;
+            else
+                tc_num++;
         }
+        std::cout << "Load " << ljc_num << " luffing jib cranes and " << tc_num << " tower cranes successfully!" << std::endl;  
     }
 
     return true;
@@ -70,9 +76,9 @@ bool CraneAntiCollision::checkCollisionBetweenID(u_int craneID1, u_int craneID2,
 std::vector<std::pair<u_int, u_int>> CraneAntiCollision::checkCollisionAll(double threshold, bool show_results)
 {
     std::vector<std::pair<u_int, u_int>> crane_pairs;
-    for(int i; i<crane_list_.size(); i++)
+    for(int i = 0; i < crane_list_.size(); i++)
     {
-        for(int j=i+1; j<crane_list_.size(); j++)
+        for(int j = i+1; j < crane_list_.size(); j++)
         {
             if(checkCollisionBetweenID(i, j, threshold))
                 crane_pairs.push_back(std::make_pair(i+1, j+1));
@@ -92,7 +98,7 @@ void CraneAntiCollision::showDistanceAll()
 {
     double dist;
     std::cout<< "cranes \t";
-    for(int i=0; i<crane_list_.size(); i++)
+    for(int i = 0; i < crane_list_.size(); i++)
         std::cout<< "Crane " << i+1 << "\t";
     std::cout<<std::endl;
 
@@ -293,7 +299,7 @@ void CraneAntiCollision::obtainSegmentsTC(const CraneConfig &crane, Segment3D &j
 
     hook_cable.p1.x = crane.x + crane.trolley_radius_jib_angle * cos(crane.slewing_angle / 180 * M_PI);
     hook_cable.p1.y = crane.y + crane.trolley_radius_jib_angle * sin(crane.slewing_angle / 180 * M_PI);
-    hook_cable.p2.z = crane.h;
+    hook_cable.p1.z = crane.h;
 
     hook_cable.p2.x = hook_cable.p1.x;
     hook_cable.p2.y = hook_cable.p1.y;

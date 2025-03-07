@@ -28,7 +28,7 @@ struct TowerCraneConfig
 
 struct CraneConfig
 {
-  unsigned char type; // 0: luffing jib crane; 1: tower crane
+  int type; // 0: luffing jib crane; 1: tower crane
   double x; // unit: meter
   double y; // unit: meter
   double h; // unit: meter

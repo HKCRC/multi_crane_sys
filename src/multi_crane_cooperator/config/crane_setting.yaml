@@ -28,8 +28,9 @@ crane_list:
       d: 0.0
       jib_length: 45.0
 #   - parameters:
-#       type: "tc"
+#       type: 1
 #       x: 80.0
 #       y: 0.0
 #       h: 40.0
+#       d: 0.0
 #       jib_length: 50.0
