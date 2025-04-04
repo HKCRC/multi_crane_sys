@@ -29,12 +29,15 @@ public:
     ~CraneAntiCollision() {}
     bool loadConfigFile(std::string file_name);
     bool checkCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
+    bool predictCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
     double getDistanceBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2);
     bool checkCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
+    bool predictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
     double getDistanceBetweenID(u_int c1, u_int c2);
     std::vector<std::pair<u_int, u_int>> checkCollisionAll(double threshold, bool show_results);
+    std::vector<std::pair<u_int, u_int>> predictCollisionAll(double threshold, bool show_results);
     void showDistanceAll();
-    void updateCraneState(u_int craneID, double slew, double jib_trolley, double hoist);
+    void updateCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity);
 
 
 private:
@@ -51,6 +54,8 @@ private:
     void obtainSegmentsTC(const CraneConfig &crane, Segment3D &jib_line, Segment3D &hook_cable);
 
     double calculateMinimalDistance(const Segment3D &jib_seg1, const Segment3D &hook_seg1, const Segment3D &jib_seg2, const Segment3D &hook_seg2);
+
+    void generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence);
 
 public:
  std::vector<CraneConfig> crane_list_;

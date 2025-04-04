@@ -37,6 +37,7 @@ struct CraneConfig
   double slewing_angle; // unit: degree
   double trolley_radius_jib_angle; // unit: meter or degree
   double hoisting_height; // unit: meter; the distance from hook to jib
+  double slewing_velocity; // unit: degree/s
 };
 
 struct CraneJointState
@@ -44,6 +45,7 @@ struct CraneJointState
     double slewing_angle;
     double jib_angle;
     double hoisting_height;
+    double slewing_velocity; 
 };
 
 
