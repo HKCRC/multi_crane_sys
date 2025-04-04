@@ -15,6 +15,7 @@ set(CMAKE_BUILD_TYPE "Release")
 
 find_package(yaml-cpp REQUIRED)
 find_package(Threads REQUIRED)
+find_package(rclcpp REQUIRED)
 
 
 add_library(tcp_multi_crane INTERFACE)
