@@ -87,11 +87,11 @@ void keyboardListener()
     switch (input) {
         case 'a':
             // crane_state[0].slewing_angle += 5.0f;
-            crane_state[0].slewing_velocity += 5.0f;
+            crane_state[0].slewing_velocity += 5.0;
             break;
         case 'd':
             // crane_state[0].slewing_angle -= 5.0f;
-            crane_state[0].slewing_velocity -= 5.0f;
+            crane_state[0].slewing_velocity -= 5.0;
             break;
         case 'w': 
             crane_state[0].jib_angle += 5.0f;
@@ -206,6 +206,8 @@ int main(int argc, char ** argv)
         crane_state[1].slewing_angle += crane_state[1].slewing_velocity * dt;
         crane_state[3].slewing_angle += crane_state[3].slewing_velocity * dt;
 
+        std::cout<<"test: ";
+
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
         std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
         std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
@@ -227,6 +229,7 @@ int main(int argc, char ** argv)
         std::cout<<"predict collision status: "<<std::endl;
         crane_collision.predictCollisionAll(5.0, true);
 
+        //send to crane collision viualizer
         multi_crane_msg::msg::MultiCraneMsg msg;
         convertCraneMsg(crane_collision.crane_list_, msg);
         publisher->publish(msg);

@@ -46,6 +46,13 @@ struct CraneJointState
     double jib_angle;
     double hoisting_height;
     double slewing_velocity; 
+
+    CraneJointState() : 
+    slewing_angle(0.0),
+    jib_angle(0.0),
+    hoisting_height(0.0),
+    slewing_velocity(0.0)
+    {}
 };
 
 

@@ -102,9 +102,10 @@ bool CraneAntiCollision::predictCollisionBetweenID(u_int craneID1, u_int craneID
 std::vector<std::pair<u_int, u_int>> CraneAntiCollision::checkCollisionAll(double threshold, bool show_results)
 {
     std::vector<std::pair<u_int, u_int>> crane_pairs;
-    for(int i = 0; i < crane_list_.size(); i++)
+
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
     {
-        for(int j = i+1; j < crane_list_.size(); j++)
+        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
         {
             if(checkCollisionBetweenID(i, j, threshold))
                 crane_pairs.push_back(std::make_pair(i+1, j+1));
@@ -123,9 +124,10 @@ std::vector<std::pair<u_int, u_int>> CraneAntiCollision::checkCollisionAll(doubl
 std::vector<std::pair<u_int, u_int>> CraneAntiCollision::predictCollisionAll(double threshold, bool show_results)
 {
     std::vector<std::pair<u_int, u_int>> crane_pairs;
-    for(int i = 0; i < crane_list_.size(); i++)
+
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
     {
-        for(int j = i+1; j < crane_list_.size(); j++)
+        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
         {
             if(predictCollisionBetweenID(i, j, threshold))
                 crane_pairs.push_back(std::make_pair(i+1, j+1));
@@ -145,14 +147,14 @@ void CraneAntiCollision::showDistanceAll()
 {
     double dist;
     std::cout<< "cranes \t";
-    for(int i = 0; i < crane_list_.size(); i++)
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
         std::cout<< "Crane " << i+1 << "\t";
     std::cout<<std::endl;
 
-    for(int i = 0; i < crane_list_.size(); i++)
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
     {
       std::cout<< "Crane " << i+1 << ": ";
-      for(int j = 0; j < crane_list_.size(); j++)
+      for(long unsigned int j = 0; j < crane_list_.size(); j++)
       {
         dist = getDistanceBetweenID(i, j);
         std::cout<< std::fixed << std::setprecision(3) << dist << "\t";
@@ -392,15 +394,22 @@ double CraneAntiCollision::calculateMinimalDistance(const Segment3D &jib_seg1, c
 
     return min_dist;
 }
+// this function is assume cranes in crame swarm has the same braking_time (is not correct, need refine)
 void CraneAntiCollision::generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence) 
 {   
 
     double slewing_position = crane.slewing_angle;
     double slewing_velocity = crane.slewing_velocity;
     // double braking_distance;
-    double braking_time = 3.5284*slewing_velocity + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
-    double sequence_timestep = 1.0f;
+
+    //case1: no consider deceleration 
+    double braking_time = 3.5284*abs(slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
     
+    //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
+    // double deceleration = -0.2068;
+    // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
+    
+    double sequence_timestep = 1.0f;
     int sequence_size = int(braking_time / sequence_timestep);
     crane_sequence.resize(sequence_size);
 

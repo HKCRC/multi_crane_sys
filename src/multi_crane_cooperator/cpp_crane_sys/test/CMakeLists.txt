@@ -20,3 +20,10 @@ ament_target_dependencies(test_keyboard_input_ros
     rclcpp
     multi_crane_msg
 )
+
+# Install the executable
+install(TARGETS test_keyboard_input_ros
+  DESTINATION lib/${CMAKE_PROJECT_NAME}
+)
+# message(WARNING "Current project name: ${PROJECT_NAME}")
+# message(WARNING "Parent project name: ${CMAKE_PROJECT_NAME}")
