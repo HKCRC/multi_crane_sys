@@ -5,3 +5,4 @@
 # Include the custom message types
 TowerCraneMsg[] tower_crane_msgs
 LuffingJibCraneMsg[] luffing_jib_crane_msgs
+CollisionMsg collision_msg

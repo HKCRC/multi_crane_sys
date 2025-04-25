@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import math
 import rclpy
 from rclpy.node import Node
-from multi_crane_msg.msg import MultiCraneMsg, TowerCraneMsg, LuffingJibCraneMsg  # Replace with your package name
+from multi_crane_msg.msg import MultiCraneMsg, TowerCraneMsg, LuffingJibCraneMsg, CollisionMsg  # Replace with your package name
 
 
 class TowerCrane:
@@ -399,6 +399,11 @@ class MultiCraneSubscriber(Node):
                 # create a crane if there doesn't exists 
                 new_lj_crane = LuffingJibCrane(lj_crane_msg)
                 crane_swarm.add_crane(new_lj_crane) 
+        
+        #parse collision msg
+        for craneID, collision_pred in enumerate(msg.collision_msg.collision_prediction):
+            if collision_pred==1:
+                self.get_logger().info(f'Need to stop crane: {craneID}')
             
 
         

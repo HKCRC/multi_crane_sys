@@ -1,5 +1,7 @@
 #ifndef CRANE_UTILITY
 #define CRANE_UTILITY
+#include <optional>
+
 
 
 struct LuffingJibCraneConfig
@@ -37,7 +39,9 @@ struct CraneConfig
   double slewing_angle; // unit: degree
   double trolley_radius_jib_angle; // unit: meter or degree
   double hoisting_height; // unit: meter; the distance from hook to jib
+
   double slewing_velocity; // unit: degree/s
+  bool is_main_crane; // true: master crane;false, master crane's neighbor
 };
 
 struct CraneJointState

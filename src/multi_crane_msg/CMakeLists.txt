@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TowerCraneMsg.msg"
   "msg/LuffingJibCraneMsg.msg"
   "msg/MultiCraneMsg.msg"
+  "msg/CollisionMsg.msg"
 )
 
 if(BUILD_TESTING)

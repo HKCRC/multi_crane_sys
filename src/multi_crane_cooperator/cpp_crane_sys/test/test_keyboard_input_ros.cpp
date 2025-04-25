@@ -13,16 +13,21 @@
 #include "multi_crane_msg/msg/multi_crane_msg.hpp"
 #include "multi_crane_msg/msg/luffing_jib_crane_msg.hpp"
 #include "multi_crane_msg/msg/tower_crane_msg.hpp"
+#include "multi_crane_msg/msg/collision_msg.hpp"
 
+// CraneJointState crane_state[4];
+std::vector<CraneJointState> crane_state(4); 
 // 全局互斥锁
 std::mutex crane_state_mutex;
 
-void convertCraneMsg(const std::vector<CraneConfig>& crane_list , multi_crane_msg::msg::MultiCraneMsg &msg)
-{
+void convertCraneMsg(CraneAntiCollision& crane_collision, multi_crane_msg::msg::MultiCraneMsg &msg)
+{   
+    // std::vector<CraneConfig> crane_list = crane_collision.crane_list_;
+
     int id = 0;
-    for(auto & config : crane_list)
+    for(auto & config : crane_collision.crane_list_)
     {
-        id++;
+        
         if(config.type == 0)
         {
             auto lj_msg = multi_crane_msg::msg::LuffingJibCraneMsg();
@@ -51,10 +56,51 @@ void convertCraneMsg(const std::vector<CraneConfig>& crane_list , multi_crane_ms
             tc_msg.hook_height = config.hoisting_height;
             msg.tower_crane_msgs.push_back(tc_msg);
         }
+        id++;
     }
+
+    long unsigned int crane_num = crane_collision.crane_num;
+    long unsigned int main_crane_id = crane_collision.main_crane_id;
+    std::vector<std::pair<u_int, u_int>> predict_collision_crane_pairs = crane_collision.predict_collision_crane_pairs;
+
+    // int collision_prediction_adj_mat[crane_num][crane_num]={0};
+    // multi_crane_msg::msg::MultiCraneCollisionMsg multi_crane_collision_msg;
+    std::vector<uint8_t> collision_prediction(crane_num, 0);  
+
+    for(auto pair : predict_collision_crane_pairs)
+    {
+        collision_prediction[pair.first]=1;
+        collision_prediction[pair.second]=1;
+    }
+
+    msg.collision_msg.main_crane_id = main_crane_id;
+    msg.collision_msg.crane_num = crane_num;
+    msg.collision_msg.collision_prediction = collision_prediction;
+
 }
 
-CraneJointState crane_state[4];
+void convertCraneCollisionMsg(CraneAntiCollision& crane_collision, multi_crane_msg::msg::CollisionMsg &msg)
+{   
+    long unsigned int crane_num = crane_collision.crane_num;
+    long unsigned int main_crane_id = crane_collision.main_crane_id;
+    std::vector<std::pair<u_int, u_int>> predict_collision_crane_pairs = crane_collision.predict_collision_crane_pairs;
+
+    // int collision_prediction_adj_mat[crane_num][crane_num]={0};
+    // multi_crane_msg::msg::MultiCraneCollisionMsg multi_crane_collision_msg;
+    std::vector<uint8_t> collision_prediction(crane_num, 0); 
+
+    for(auto pair : predict_collision_crane_pairs)
+    {
+        collision_prediction[pair.first]=1;
+        collision_prediction[pair.second]=1;
+    }
+
+    msg.main_crane_id = main_crane_id;
+    msg.crane_num = crane_num;
+    msg.collision_prediction = collision_prediction;
+}
+
+
 
 termios originalTty;
 void setNonBlockingInput()
@@ -73,6 +119,12 @@ void restoreTerminalSettings()
   tcsetattr(STDIN_FILENO, TCSANOW, &originalTty); // recover settings
 }
 
+void signalHandler(int signum) {
+    restoreTerminalSettings();
+    std::cout << "\nExiting gracefully...\n";
+    exit(signum);
+}
+
 void keyboardListener() 
 {
   setNonBlockingInput();
@@ -87,11 +139,11 @@ void keyboardListener()
     switch (input) {
         case 'a':
             // crane_state[0].slewing_angle += 5.0f;
-            crane_state[0].slewing_velocity += 5.0;
+            crane_state[0].slewing_velocity += 4.65;
             break;
         case 'd':
             // crane_state[0].slewing_angle -= 5.0f;
-            crane_state[0].slewing_velocity -= 5.0;
+            crane_state[0].slewing_velocity -= 4.65;
             break;
         case 'w': 
             crane_state[0].jib_angle += 5.0f;
@@ -107,11 +159,11 @@ void keyboardListener()
             break;
         case 'h':
             // crane_state[1].slewing_angle += 5.0f;
-            crane_state[1].slewing_velocity += 5.0f;
+            crane_state[1].slewing_velocity += 4.65f;
             break;
         case 'k':
             // crane_state[1].slewing_angle -= 5.0f;
-            crane_state[1].slewing_velocity -= 5.0f;
+            crane_state[1].slewing_velocity -= 4.65f;
             break;
         case 'u': 
             crane_state[1].jib_angle += 5.0f;
@@ -151,10 +203,46 @@ void keyboardListener()
     }
     usleep(10*1000);
   }
+  restoreTerminalSettings(); // 确保退出时恢复设置
+}
+
+void keyboardSimulatorUpdate(std::vector<CraneJointState>& crane_state,CraneAntiCollision& crane_collision, double dt) {
+
+        std::vector<std::pair<u_int, u_int>> predict_collision_crane_pairs = crane_collision.predict_collision_crane_pairs;
+        std::vector<uint8_t> collision_prediction(crane_collision.crane_num, 0);  
+
+        for(auto pair : predict_collision_crane_pairs)
+        {
+            collision_prediction[pair.first]=1;
+            collision_prediction[pair.second]=1;
+        }
+
+        for (size_t i = 0; i < crane_state.size(); ++i) {
+            if (static_cast<int>(collision_prediction[i]) == 1) 
+            {   
+                // do nothing
+                // crane_state[i].slewing_angle = crane_state[i].slewing_angle
+                // crane_state[i].slewing_angle = std::fmod(crane_state[i].slewing_angle, 360.0);
+            }
+            else 
+            {   
+                crane_state[i].slewing_angle += crane_state[i].slewing_velocity * dt;
+                crane_state[i].slewing_angle = std::fmod(crane_state[i].slewing_angle, 360.0);
+            }
+        }
+}
+
+void keyboardSimulatorUpdate(std::vector<CraneJointState>& crane_state, double dt) {
+        for (size_t i = 0; i < crane_state.size(); ++i) {
+            crane_state[i].slewing_angle += crane_state[i].slewing_velocity * dt;
+            crane_state[i].slewing_angle = std::fmod(crane_state[i].slewing_angle, 360.0);
+        }
 }
 
 int main(int argc, char ** argv)
 {
+    signal(SIGINT, signalHandler); // 捕获异常SIGINT
+
     if (argc < 2) 
     {
             std::cerr << "Usage: " << argv[0] << " <path_to_param_file>\n";
@@ -181,7 +269,7 @@ int main(int argc, char ** argv)
     auto node = rclcpp::Node::make_shared("test");
 
     rclcpp::Publisher<multi_crane_msg::msg::MultiCraneMsg>::SharedPtr publisher = node->create_publisher<multi_crane_msg::msg::MultiCraneMsg>("multi_crane", 10);
-
+    rclcpp::Publisher<multi_crane_msg::msg::CollisionMsg>::SharedPtr collision_publisher = node->create_publisher<multi_crane_msg::msg::CollisionMsg>("multi_crane_collision", 10);
     long int cnt = 0;
     // 初始化上一次的时间
     rclcpp::Time last_time = node->now();
@@ -202,16 +290,16 @@ int main(int argc, char ** argv)
         std::lock_guard<std::mutex> lock(crane_state_mutex);
 
         // 对速度进行积分得到角度
-        crane_state[0].slewing_angle += crane_state[0].slewing_velocity * dt;
-        crane_state[1].slewing_angle += crane_state[1].slewing_velocity * dt;
-        crane_state[3].slewing_angle += crane_state[3].slewing_velocity * dt;
+        // keyboardSimulatorUpdate(crane_state,crane_collision, dt);
+        keyboardSimulatorUpdate(crane_state, dt);
 
         std::cout<<"test: ";
 
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
-        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
-        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
-        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
+        std::cout<<"Main crane ID: "<< crane_collision.main_crane_id << "  ---------"<< std::endl;
+        std::cout<<"Crane 0: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
+        std::cout<<"Crane 1: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
+        std::cout<<"Crane 3: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
         // update cranes' state
         crane_collision.updateCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_angle,\
          crane_state[0].hoisting_height, crane_state[0].slewing_velocity);
@@ -228,11 +316,22 @@ int main(int argc, char ** argv)
         
         std::cout<<"predict collision status: "<<std::endl;
         crane_collision.predictCollisionAll(5.0, true);
-
+        // crane_collision.predictCollisionMainCraneNeighbor(5.0, true);
+        
         //send to crane collision viualizer
         multi_crane_msg::msg::MultiCraneMsg msg;
-        convertCraneMsg(crane_collision.crane_list_, msg);
+        convertCraneMsg(crane_collision, msg);
         publisher->publish(msg);
+
+        //send to crane collision status
+        multi_crane_msg::msg::CollisionMsg collision_msg;
+        convertCraneCollisionMsg(crane_collision, collision_msg);
+        std::cout << "Collision prediction array: ";
+        for(const auto& pred : collision_msg.collision_prediction) {
+            std::cout << static_cast<int>(pred) << " ";
+        }
+        std::cout << std::endl;
+        collision_publisher->publish(collision_msg);
 
         usleep(100*1000); // microseconds
     }
