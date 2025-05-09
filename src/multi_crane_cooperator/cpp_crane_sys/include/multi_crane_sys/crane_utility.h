@@ -41,19 +41,22 @@ struct CraneConfig
   double hoisting_height; // unit: meter; the distance from hook to jib
 
   double slewing_velocity; // unit: degree/s
+  double current_time;
   bool is_main_crane; // true: master crane;false, master crane's neighbor
 };
 
 struct CraneJointState
 {
+    double current_time;
     double slewing_angle;
-    double jib_angle;
+    double jib_trolley;
     double hoisting_height;
     double slewing_velocity; 
 
     CraneJointState() : 
+    current_time(0.0),
     slewing_angle(0.0),
-    jib_angle(0.0),
+    jib_trolley(0.0),
     hoisting_height(0.0),
     slewing_velocity(0.0)
     {}

@@ -76,30 +76,38 @@ int main(int argc, char ** argv)
         crane_state[1].slewing_angle = modbus_sensor_data.slew_angle.value;
         crane_state[1].jib_angle = modbus_sensor_data.luff_angle.value;
         crane_state[1].hoisting_height = modbus_sensor_data.hoist_cable_length.value;
+        crane_state[i].current_time  = current_time;
 
         crane_state[0].slewing_angle = group_sensor_data.encoder1_data.value;
         crane_state[0].jib_angle = group_sensor_data.imu1_data.roll;
         crane_state[0].hoisting_height = 100.0;
+        crane_state[i].current_time  = current_time;
         
         crane_state[3].slewing_angle = group_sensor_data.encoder2_data.value;
         crane_state[3].jib_angle = group_sensor_data.imu2_data.roll;
         crane_state[3].hoisting_height = 100.0;
+        crane_state[i].current_time  = current_time;
 
         
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
         std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
         std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
         std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
-        // update cranes' state
-        crane_collision.updateCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_angle, crane_state[0].hoisting_height);
-        crane_collision.updateCraneState(1, crane_state[1].slewing_angle, crane_state[1].jib_angle, crane_state[1].hoisting_height);
-        crane_collision.updateCraneState(2, crane_state[3].slewing_angle, crane_state[3].jib_angle, crane_state[3].hoisting_height);
+
+        // update cranes' state and slewing velocity
+        crane_collision.updateAllCraneState(crane_state);
+        crane_collision.updateCraneSlewingVelocity();
         
         std::cout<<"distance between cranes: "<<std::endl;
         crane_collision.showDistanceAll();
 
         std::cout<<"collision status: "<<std::endl;
         crane_collision.checkCollisionAll(5.0, true);
+
+        std::cout<<"predict collision status: "<<std::endl;
+        crane_collision.predictCollisionAll(5.0, true);
+        // crane_collision.predictCollisionMainCraneNeighbor(5.0, true);
+
         usleep(100*1000); // microseconds
     }
 }

@@ -161,6 +161,32 @@ private:
     }
     restoreTerminalSettings(); // 确保退出时恢复设置
     }
+    void keyboardSimulatorUpdate(std::vector<CraneJointState>& crane_state,CraneAntiCollision& crane_collision, double dt, double current_time) {
+
+        std::vector<std::pair<u_int, u_int>> predict_collision_crane_pairs = crane_collision.predict_collision_crane_pairs;
+        std::vector<uint8_t> collision_prediction(crane_collision.crane_num, 0);  
+
+        for(auto pair : predict_collision_crane_pairs)
+        {
+            collision_prediction[pair.first]=1;
+            collision_prediction[pair.second]=1;
+        }
+
+        for (size_t i = 0; i < crane_state.size(); ++i) {
+            if (static_cast<int>(collision_prediction[i]) == 1) //stop update if there is collision
+            {   
+                // do nothing
+                // crane_state[i].slewing_angle = crane_state[i].slewing_angle
+                // crane_state[i].slewing_angle = std::fmod(crane_state[i].slewing_angle, 360.0);
+            }
+            else 
+            {   
+                crane_state[i].slewing_angle += crane_state[i].slewing_velocity * dt;
+                crane_state[i].slewing_angle += crane_state[i].slewing_velocity * dt;
+                crane_state[i].slewing_angle = std::fmod(crane_state[i].slewing_angle, 360.0);
+            }
+        }
+}
 
     std::thread keyboard_thread_;
     std::mutex crane_state_mutex_;

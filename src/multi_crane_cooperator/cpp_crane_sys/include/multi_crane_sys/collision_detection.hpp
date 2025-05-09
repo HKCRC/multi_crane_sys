@@ -32,6 +32,7 @@ public:
     // void initAdjacencyMatrix(void);
     bool checkCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
     bool predictCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
+    bool conservativePredictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
     double getDistanceBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2);
     bool checkCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
     bool predictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
@@ -40,8 +41,9 @@ public:
     std::vector<std::pair<u_int, u_int>> predictCollisionAll(double threshold, bool show_results);
     std::vector<std::pair<u_int, u_int>> predictCollisionMainCraneNeighbor(double threshold, bool show_results);
     void showDistanceAll();
-    void updateCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity);
-
+    void updateSingleCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity);
+    void updateAllCraneState(std::vector<CraneJointState>&  crane_joint_state);
+    void updateCraneSlewingVelocity();
 
 private:
     double distance(const Point3D &p1, const Point3D &p2);
@@ -62,13 +64,18 @@ private:
 
     void generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, double sequence_time);
 
+    void conservative_generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, u_int crane_id); 
+
     void calculate_braking_time(const CraneConfig& crane1, const CraneConfig& crane2, double& braking_time);
 
 public:
  std::vector<CraneConfig> crane_list_;
  long unsigned int crane_num=0, ljc_num=0, tc_num=0;
- long unsigned int main_crane_id;
+ long unsigned int main_crane_id_;
  std::vector<std::pair<u_int, u_int>> predict_collision_crane_pairs;
+
+private:
+ std::vector<CraneConfig> last_crane_list_;
 //  std::vector<std::vector<double>> braking_time_adj_mat; //adjacency matrix for braking time
 //  std::vector<std::vector<double>> collision_prediction_adj_mat; //adjacency matrix for ollision prediction status
 };
