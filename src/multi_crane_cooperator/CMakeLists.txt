@@ -23,12 +23,12 @@ find_package(multi_crane_msg REQUIRED)
 
 add_subdirectory(cpp_crane_sys)
 
-# add_executable(ros_wrapper_tcp_node src/ros_wrapper_tcp_node.cpp)
-# ament_target_dependencies(ros_wrapper_tcp_node rclcpp std_msgs multi_crane_msg)
-# target_link_libraries(ros_wrapper_tcp_node multi_crane_sys)
+add_executable(ros_wrapper_tcp_node src/ros_wrapper_tcp_node.cpp)
+ament_target_dependencies(ros_wrapper_tcp_node rclcpp std_msgs multi_crane_msg)
+target_link_libraries(ros_wrapper_tcp_node multi_crane_sys)
 
-# install(TARGETS ros_wrapper_tcp_node
-#   DESTINATION lib/${PROJECT_NAME})
+install(TARGETS ros_wrapper_tcp_node
+  DESTINATION lib/${PROJECT_NAME})
 
 
 if(BUILD_TESTING)

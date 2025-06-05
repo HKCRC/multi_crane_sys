@@ -18,6 +18,7 @@ bool CraneAntiCollision::loadConfigFile(std::string file_name)
         CraneConfig crane_config;
         for (const auto &crane : config["crane_list"])
         {
+            crane_config.name = crane["parameters"]["name"].as<std::string>();
             crane_config.type = crane["parameters"]["type"].as<int>();
             crane_config.x = crane["parameters"]["x"].as<double>();
             crane_config.y = crane["parameters"]["y"].as<double>();
@@ -57,276 +58,6 @@ void CraneAntiCollision::findMainCraneID(void)
     }
 }
 
-double CraneAntiCollision::getDistanceBetweenID(u_int craneID1, u_int craneID2)
-{
-    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
-    {
-        std::cout<<"The crane ID is out of range"<<std::endl;
-        return 0;
-    }
-
-    CraneConfig crane1 = crane_list_[craneID1];
-    CraneConfig crane2 = crane_list_[craneID2];
-
-    double distance = getDistanceBetweenCranes(crane1, crane2);
-    
-    return distance;
-}
-
-bool CraneAntiCollision::checkCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
-{ 
-    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
-    {
-        std::cout<<"The crane ID is out of range"<<std::endl;
-        return false;
-    }
-
-    CraneConfig crane1 = crane_list_[craneID1];
-    CraneConfig crane2 = crane_list_[craneID2];
-    double distance = getDistanceBetweenCranes(crane1, crane2);
-
-    if(distance < threshold)
-        return true;
-    else
-        return false;
-}
-
-bool CraneAntiCollision::predictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
-{ 
-    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
-    {
-        std::cout<<"The crane ID is out of range"<<std::endl;
-        return false;
-    }
-
-    CraneConfig crane1 = crane_list_[craneID1];
-    CraneConfig crane2 = crane_list_[craneID2];
-
-    std::vector<CraneConfig> crane1_sequence;
-    std::vector<CraneConfig> crane2_sequence;
-
-    double braking_time; 
-
-    calculate_braking_time(crane1, crane2, braking_time);
-    std::cout<<"Crane " << craneID1 << " and Crane " << craneID2 << " braking time: " << braking_time <<std::endl;
-
-    generate_prediction_sequence(crane1, crane1_sequence,braking_time);
-    generate_prediction_sequence(crane2, crane2_sequence,braking_time);
-
-    //test:crane 0 and crane 1
-    if (craneID2==1)
-    {
-        std::cout<<"Crane "<< craneID1<< " predicted braking end-position: " << crane1_sequence.back().slewing_angle <<std::endl;
-        std::cout<<"Crane "<< craneID2<< " predicted braking end-position: " << crane2_sequence.back().slewing_angle <<std::endl;
-    }
-
-    int size = std::min(crane1_sequence.size(), crane2_sequence.size()); 
-    for(int i = 0; i < size; i++)
-    {
-        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[i], threshold))
-            return true;
-    }
-    return false;
-}
-bool CraneAntiCollision::conservativePredictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
-{ 
-    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
-    {
-        std::cout<<"The crane ID is out of range"<<std::endl;
-        return false;
-    }
-
-    CraneConfig crane1 = crane_list_[craneID1];
-    CraneConfig crane2 = crane_list_[craneID2];
-
-    std::vector<CraneConfig> crane1_sequence;
-    std::vector<CraneConfig> crane2_sequence;
-
-    conservative_generate_prediction_sequence(crane1, crane1_sequence, craneID1);
-    conservative_generate_prediction_sequence(crane2, crane2_sequence, craneID2);
-
-    std::cout<<"Crane "<< craneID1 <<"and " <<"Crane "<< craneID2 <<"-------------------------------------------------"<<std::endl;
-    std::cout<<"Crane "<< craneID1 << "current and predicted end position: " << crane1_sequence[0].slewing_angle << " and " <<crane1_sequence.back().slewing_angle <<std::endl;
-    std::cout<<"Crane "<< craneID2 << "current and predicted end position： " << crane2_sequence[0].slewing_angle << " and " <<crane2_sequence.back().slewing_angle <<std::endl;
-
-    for(u_int i = 0; i < crane1_sequence.size(); i++)
-    {
-        for(u_int j = 0; j < crane2_sequence.size(); j++)
-        {
-        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[j], threshold))
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-
-std::vector<std::pair<u_int, u_int>> CraneAntiCollision::checkCollisionAll(double threshold, bool show_results)
-{
-    std::vector<std::pair<u_int, u_int>> crane_pairs;
-
-    for(long unsigned int i = 0; i < crane_list_.size(); i++)
-    {
-        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
-        {
-            if(checkCollisionBetweenID(i, j, threshold))
-                crane_pairs.push_back(std::make_pair(i, j));
-        }
-    }
-    if(show_results)
-    {
-        for(auto pair : crane_pairs)
-        {
-            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are too close!"<<std::endl;
-        }
-    }
-    return crane_pairs;
-}
-
-std::vector<std::pair<u_int, u_int>> CraneAntiCollision::predictCollisionAll(double threshold, bool show_results)
-{
-    // std::vector<std::pair<u_int, u_int>> crane_pairs;
-    predict_collision_crane_pairs.clear();
-
-    for(long unsigned int i = 0; i < crane_list_.size(); i++)
-    {
-        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
-        {
-            // if(predictCollisionBetweenID(i, j, threshold))
-            if(conservativePredictCollisionBetweenID(i, j, threshold))
-            {
-                predict_collision_crane_pairs.push_back(std::make_pair(i, j));
-            }
-        }
-    }
-
-    if(show_results)
-    {
-        for(auto pair : predict_collision_crane_pairs)
-        {
-            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are predicted to be too close!"<<std::endl;
-        }
-    }
-    return predict_collision_crane_pairs;
-}
-
-std::vector<std::pair<u_int, u_int>> CraneAntiCollision::predictCollisionMainCraneNeighbor(double threshold, bool show_results)
-{
-    // std::vector<std::pair<u_int, u_int>> crane_pairs;
-    predict_collision_crane_pairs.clear();
-
-    for(long unsigned int i = 0; i < crane_list_.size(); i++)
-    {
-        if (main_crane_id_ == i)
-        {
-            continue;
-        }
-        // if(predictCollisionBetweenID(main_crane_id_, i, threshold))
-        if(conservativePredictCollisionBetweenID(main_crane_id_, i, threshold))
-        {
-            std::cout<<"test5"<<std::endl;
-            predict_collision_crane_pairs.push_back(std::make_pair(main_crane_id_, i));
-        }
-        
-    }
-
-    if(show_results)
-    {
-        for(auto pair : predict_collision_crane_pairs)
-        {
-            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are predicted to be too close!"<<std::endl;
-        }
-    }
-    return predict_collision_crane_pairs;
-}
-
-void CraneAntiCollision::showDistanceAll()
-{
-    double dist;
-    std::cout<< "cranes \t";
-    for(long unsigned int i = 0; i < crane_list_.size(); i++)
-        std::cout<< "Crane " << i << "\t";
-    std::cout<<std::endl;
-
-    for(long unsigned int i = 0; i < crane_list_.size(); i++)
-    {
-      std::cout<< "Crane " << i << ": ";
-      for(long unsigned int j = 0; j < crane_list_.size(); j++)
-      {
-        dist = getDistanceBetweenID(i, j);
-        std::cout<< std::fixed << std::setprecision(3) << dist << "\t";
-      }
-      std::cout<<std::endl;
-    }
-      
-}
-bool CraneAntiCollision::checkCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold)
-{
-    double distance = getDistanceBetweenCranes(crane1, crane2);
-
-    if(distance < threshold)
-        return true;
-    else
-        return false;
-}
-
-bool CraneAntiCollision::predictCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold)
-{
-    std::vector<CraneConfig> crane1_sequence;
-    std::vector<CraneConfig> crane2_sequence;
-
-    double braking_time;
-
-    calculate_braking_time(crane1, crane2, braking_time);
-    generate_prediction_sequence(crane1, crane1_sequence,braking_time);
-    generate_prediction_sequence(crane2, crane2_sequence,braking_time);
-
-    int size = std::min(crane1_sequence.size(), crane2_sequence.size()); 
-    for(int i = 0; i < size; i++)
-    {
-        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[i], threshold))
-            return true;
-    }
-    return false;
-}
-
-double CraneAntiCollision::getDistanceBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2)
-{
-    Segment3D jib_seg1, hook_seg1, jib_seg2, hook_seg2;
-
-    if(crane1.type == 0)
-    {
-        obtainSegmentsLJC(crane1, jib_seg1, hook_seg1);
-    }
-    else
-    {
-        obtainSegmentsTC(crane1, jib_seg1, hook_seg1);
-    }
-    if(crane2.type == 0)
-    {
-        obtainSegmentsLJC(crane2, jib_seg2, hook_seg2);
-    }
-    else
-    {
-        obtainSegmentsTC(crane2, jib_seg2, hook_seg2);
-    }
-
-    return calculateMinimalDistance(jib_seg1, hook_seg1, jib_seg2, hook_seg2);
-}
-
-void CraneAntiCollision::updateAllCraneState(std::vector<CraneJointState>&  crane_joint_state)
-{
-    last_crane_list_ = crane_list_;
-    for(size_t craneID = 0; craneID < crane_joint_state.size(); craneID++) {
-        crane_list_[craneID].slewing_angle = crane_joint_state[craneID].slewing_angle;
-        crane_list_[craneID].trolley_radius_jib_angle = crane_joint_state[craneID].jib_trolley;
-        crane_list_[craneID].hoisting_height = crane_joint_state[craneID].hoisting_height;
-        crane_list_[craneID].current_time = crane_joint_state[craneID].current_time;
-    }
-
-}
-
 void CraneAntiCollision::updateSingleCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity)
 {
     if (craneID >= crane_list_.size())
@@ -340,6 +71,38 @@ void CraneAntiCollision::updateSingleCraneState(u_int craneID, double slew, doub
     crane_list_[craneID].slewing_velocity = slewing_velocity;
 }
 
+void CraneAntiCollision::updateAllCraneState(std::vector<CraneJointState>&  crane_joint_state)
+{
+    last_crane_list_ = crane_list_;
+    for(size_t craneID = 0; craneID < crane_joint_state.size(); craneID++) {
+        crane_list_[craneID].slewing_angle = crane_joint_state[craneID].slewing_angle;
+        crane_list_[craneID].trolley_radius_jib_angle = crane_joint_state[craneID].jib_trolley;
+        crane_list_[craneID].hoisting_height = crane_joint_state[craneID].hoisting_height;
+        crane_list_[craneID].current_time = crane_joint_state[craneID].current_time;
+    }
+}
+
+void CraneAntiCollision::updateCraneSlewingVelocity()
+{
+    // Calculate slewing velocity for all cranes
+    for(size_t i = 0; i < crane_list_.size(); i++) {
+        double dt = crane_list_[i].current_time - last_crane_list_[i].current_time; // unit:s
+
+        // 最短路径原则解决角度跨越问题
+        double angle_diff = crane_list_[i].slewing_angle - last_crane_list_[i].slewing_angle;
+        // 如果角度差大于180度，说明走了"长路"，应该走"短路"
+        if (angle_diff > 180.0) {
+            angle_diff -= 360.0;
+        }
+        // 如果角度差小于-180度，说明走了"长路"，应该走"短路"
+        else if (angle_diff < -180.0) {
+            angle_diff += 360.0;
+        }
+        
+        crane_list_[i].slewing_velocity = angle_diff / dt;
+    }
+
+}
 
 double CraneAntiCollision::distance(const Point3D &p1, const Point3D &p2)
 {
@@ -508,35 +271,171 @@ double CraneAntiCollision::calculateMinimalDistance(const Segment3D &jib_seg1, c
 
     return min_dist;
 }
-// // this function is assume cranes in crame swarm has the same braking_time (is not correct, need refine)
-// void CraneAntiCollision::generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence) 
-// {   
 
-//     double slewing_position = crane.slewing_angle;
-//     double slewing_velocity = crane.slewing_velocity;
-//     // double braking_distance;
+double CraneAntiCollision::getDistanceBetweenID(u_int craneID1, u_int craneID2)
+{
+    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
+    {
+        std::cout<<"The crane ID is out of range"<<std::endl;
+        return 0;
+    }
 
-//     //case1: no consider deceleration 
-//     double braking_time = 3.5284*abs(slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
+    CraneConfig crane1 = crane_list_[craneID1];
+    CraneConfig crane2 = crane_list_[craneID2];
+
+    double distance = getDistanceBetweenCranes(crane1, crane2);
     
-//     //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
-//     // double deceleration = -0.2068;
-//     // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
+    return distance;
+}
+
+double CraneAntiCollision::getDistanceBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2)
+{
+    Segment3D jib_seg1, hook_seg1, jib_seg2, hook_seg2;
+
+    if(crane1.type == 0)
+    {
+        obtainSegmentsLJC(crane1, jib_seg1, hook_seg1);
+    }
+    else
+    {
+        obtainSegmentsTC(crane1, jib_seg1, hook_seg1);
+    }
+    if(crane2.type == 0)
+    {
+        obtainSegmentsLJC(crane2, jib_seg2, hook_seg2);
+    }
+    else
+    {
+        obtainSegmentsTC(crane2, jib_seg2, hook_seg2);
+    }
+
+    return calculateMinimalDistance(jib_seg1, hook_seg1, jib_seg2, hook_seg2);
+}
+
+void CraneAntiCollision::showDistanceAll()
+{
+    double dist;
+    std::cout<< "cranes \t";
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
+        std::cout<< "Crane " << i << "\t";
+    std::cout<<std::endl;
+
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+      std::cout<< "Crane " << i << ": ";
+      for(long unsigned int j = 0; j < crane_list_.size(); j++)
+      {
+        dist = getDistanceBetweenID(i, j);
+        std::cout<< std::fixed << std::setprecision(3) << dist << "\t";
+      }
+      std::cout<<std::endl;
+    }
+      
+}
+
+bool CraneAntiCollision::checkCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
+{ 
+    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
+    {
+        std::cout<<"The crane ID is out of range"<<std::endl;
+        return false;
+    }
+
+    CraneConfig crane1 = crane_list_[craneID1];
+    CraneConfig crane2 = crane_list_[craneID2];
+    double distance = getDistanceBetweenCranes(crane1, crane2);
+
+    if(distance < threshold)
+        return true;
+    else
+        return false;
+}
+
+bool CraneAntiCollision::checkCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold)
+{
+    double distance = getDistanceBetweenCranes(crane1, crane2);
+
+    if(distance < threshold)
+        return true;
+    else
+        return false;
+}
+
+std::vector<std::pair<u_int, u_int>> CraneAntiCollision::checkCollisionAll(double threshold, bool show_results)
+{
+    std::vector<std::pair<u_int, u_int>> crane_pairs;
+
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
+        {
+            if(checkCollisionBetweenID(i, j, threshold))
+                crane_pairs.push_back(std::make_pair(i, j));
+        }
+    }
+    if(show_results)
+    {
+        for(auto pair : crane_pairs)
+        {
+            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are too close!"<<std::endl;
+        }
+    }
+    return crane_pairs;
+}
+
+bool CraneAntiCollision::checkCollisionBetweenSequences(const std::vector<CraneConfig>& crane1_sequence, const std::vector<CraneConfig>& crane2_sequence, double threshold, bool sync)
+{
+    if(sync)
+    {
+        int size = std::min(crane1_sequence.size(), crane2_sequence.size());
+        for(int i = 0; i < size; i++)
+        {
+            if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[i], threshold))
+                return true;
+        }
+        return false;
+    }
+    else
+    {
+        for(int i = 0; i < crane1_sequence.size(); i++)
+        {
+            for(int j = 0; j < crane2_sequence.size(); j++)
+            {
+                if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[j], threshold))
+                    return true;
+            }
+        }
+        return false;
+    }
+}
+
+/// Strategy one: predict collision by considering sync slewing motion sequence with brake distance.
+void CraneAntiCollision::calculate_braking_time(const CraneConfig& crane1, const CraneConfig& crane2, double& braking_time) 
+{   
+
+    if (crane1.is_main_crane == true)
+    {
+    //case1: no consider deceleration 
+    braking_time = 3.5284*abs(crane1.slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
     
-//     double sequence_timestep = 1.0f;
-//     int sequence_size = int(braking_time / sequence_timestep);
-//     crane_sequence.resize(sequence_size);
-
-//     for (int i = 0; i <= sequence_size-1; i++) {
-//         crane_sequence[i] = crane;
-//         // only predict slewing_angle element
-//         slewing_position =  slewing_position + slewing_velocity*sequence_timestep;
-//         crane_sequence[i].slewing_angle = slewing_position;
-//     }
-//     // std::cout<<"crane_state:" << crane <<std::endl; 
-//     // print_TC_stdVector(tower_crane_sequence);
-// }
-
+    //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
+    // double deceleration = -0.2068;
+    // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
+    }
+    else if (crane2.is_main_crane == true)
+    {
+    //case1: no consider deceleration 
+    braking_time = 3.5284*abs(crane2.slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
+    
+    //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
+    // double deceleration = -0.2068;
+    // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
+    }
+    else 
+    {braking_time = 15.05;} //如果不知道刹车时间信息，则按照最高本主塔机的最高岗位3挡的刹车时间来算
+    // std::cout<<"crane_state:" << crane <<std::endl; 
+    // print_TC_stdVector(tower_crane_sequence);
+}
 
 void CraneAntiCollision::generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence,double sequence_time) 
 {   
@@ -573,6 +472,65 @@ void CraneAntiCollision::generate_prediction_sequence(const CraneConfig& crane, 
     // print_TC_stdVector(tower_crane_sequence);
 }
 
+bool CraneAntiCollision::predictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
+{ 
+    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
+    {
+        std::cout<<"The crane ID is out of range"<<std::endl;
+        return false;
+    }
+
+    CraneConfig crane1 = crane_list_[craneID1];
+    CraneConfig crane2 = crane_list_[craneID2];
+
+    std::vector<CraneConfig> crane1_sequence;
+    std::vector<CraneConfig> crane2_sequence;
+
+    double braking_time; 
+
+    calculate_braking_time(crane1, crane2, braking_time);
+    std::cout<<"Crane " << craneID1 << " and Crane " << craneID2 << " braking time: " << braking_time <<std::endl;
+
+    generate_prediction_sequence(crane1, crane1_sequence,braking_time);
+    generate_prediction_sequence(crane2, crane2_sequence,braking_time);
+
+    //test:crane 0 and crane 1
+    if (craneID2==1)
+    {
+        std::cout<<"Crane "<< craneID1<< " predicted braking end-position: " << crane1_sequence.back().slewing_angle <<std::endl;
+        std::cout<<"Crane "<< craneID2<< " predicted braking end-position: " << crane2_sequence.back().slewing_angle <<std::endl;
+    }
+
+    int size = std::min(crane1_sequence.size(), crane2_sequence.size()); 
+    for(int i = 0; i < size; i++)
+    {
+        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[i], threshold))
+            return true;
+    }
+    return false;
+}
+
+bool CraneAntiCollision::predictCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold)
+{
+    std::vector<CraneConfig> crane1_sequence;
+    std::vector<CraneConfig> crane2_sequence;
+
+    double braking_time;
+
+    calculate_braking_time(crane1, crane2, braking_time);
+    generate_prediction_sequence(crane1, crane1_sequence,braking_time);
+    generate_prediction_sequence(crane2, crane2_sequence,braking_time);
+
+    int size = std::min(crane1_sequence.size(), crane2_sequence.size()); 
+    for(int i = 0; i < size; i++)
+    {
+        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[i], threshold))
+            return true;
+    }
+    return false;
+}
+
+/// Strategy two: predict collision within the certain neighborhood of slewing motion.
 void CraneAntiCollision::conservative_generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, u_int crane_id) 
 {   
     double slewing_velocity = crane.slewing_velocity;
@@ -610,51 +568,170 @@ void CraneAntiCollision::conservative_generate_prediction_sequence(const CraneCo
     // print_TC_stdVector(tower_crane_sequence);
 }
 
-void CraneAntiCollision::calculate_braking_time(const CraneConfig& crane1, const CraneConfig& crane2, double& braking_time) 
-{   
+bool CraneAntiCollision::conservativePredictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold)
+{ 
+    if(craneID1 >= crane_list_.size() || craneID2 >= crane_list_.size())
+    {
+        std::cout<<"The crane ID is out of range"<<std::endl;
+        return false;
+    }
 
-    if (crane1.is_main_crane == true)
+    CraneConfig crane1 = crane_list_[craneID1];
+    CraneConfig crane2 = crane_list_[craneID2];
+
+    std::vector<CraneConfig> crane1_sequence;
+    std::vector<CraneConfig> crane2_sequence;
+
+    conservative_generate_prediction_sequence(crane1, crane1_sequence, craneID1);
+    conservative_generate_prediction_sequence(crane2, crane2_sequence, craneID2);
+
+    std::cout<<"Crane "<< craneID1 <<"and " <<"Crane "<< craneID2 <<"-------------------------------------------------"<<std::endl;
+    std::cout<<"Crane "<< craneID1 << "current and predicted end position: " << crane1_sequence[0].slewing_angle << " and " <<crane1_sequence.back().slewing_angle <<std::endl;
+    std::cout<<"Crane "<< craneID2 << "current and predicted end position： " << crane2_sequence[0].slewing_angle << " and " <<crane2_sequence.back().slewing_angle <<std::endl;
+
+    for(u_int i = 0; i < crane1_sequence.size(); i++)
     {
-    //case1: no consider deceleration 
-    braking_time = 3.5284*abs(crane1.slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
-    
-    //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
-    // double deceleration = -0.2068;
-    // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
+        for(u_int j = 0; j < crane2_sequence.size(); j++)
+        {
+        if(checkCollisionBetweenCranes(crane1_sequence[i], crane2_sequence[j], threshold))
+            return true;
+        }
     }
-    else if (crane2.is_main_crane == true)
-    {
-    //case1: no consider deceleration 
-    braking_time = 3.5284*abs(crane2.slewing_velocity) + 2.3791; //fitted by Boyuan's 3 data pairs,need to be verified
     
-    //case2: cnsider deceleration; gear1 dec = 0.2068 deg/s^2, gear2 = 0.2949 deg/s^2, gear3= 0.3090 deg/s^2
-    // double deceleration = -0.2068;
-    // double braking_time = slewing_velocity + sqrt(pow(slewing_velocity,2) - 2*deceleration*slewing_position); 
-    }
-    else 
-    {braking_time = 15.05;} //如果不知道刹车时间信息，则按照最高本主塔机的最高岗位3挡的刹车时间来算
-    // std::cout<<"crane_state:" << crane <<std::endl; 
-    // print_TC_stdVector(tower_crane_sequence);
+    return false;
 }
 
-void CraneAntiCollision::updateCraneSlewingVelocity()
+std::vector<std::pair<u_int, u_int>> CraneAntiCollision::predictCollisionAll(double threshold, bool show_results)
 {
-    // Calculate slewing velocity for all cranes
-    for(size_t i = 0; i < crane_list_.size(); i++) {
-        double dt = crane_list_[i].current_time - last_crane_list_[i].current_time; // unit:s
+    // std::vector<std::pair<u_int, u_int>> crane_pairs;
+    predict_collision_crane_pairs.clear();
 
-        // 最短路径原则解决角度跨越问题
-        double angle_diff = crane_list_[i].slewing_angle - last_crane_list_[i].slewing_angle;
-        // 如果角度差大于180度，说明走了"长路"，应该走"短路"
-        if (angle_diff > 180.0) {
-            angle_diff -= 360.0;
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+        for(long unsigned int j = i+1; j < crane_list_.size(); j++)
+        {
+            // if(predictCollisionBetweenID(i, j, threshold))
+            if(conservativePredictCollisionBetweenID(i, j, threshold))
+            {
+                predict_collision_crane_pairs.push_back(std::make_pair(i, j));
+            }
         }
-        // 如果角度差小于-180度，说明走了"长路"，应该走"短路"
-        else if (angle_diff < -180.0) {
-            angle_diff += 360.0;
+    }
+
+    if(show_results)
+    {
+        for(auto pair : predict_collision_crane_pairs)
+        {
+            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are predicted to be too close!"<<std::endl;
+        }
+    }
+    return predict_collision_crane_pairs;
+}
+
+std::vector<std::pair<u_int, u_int>> CraneAntiCollision::predictCollisionMainCraneNeighbor(double threshold, bool show_results)
+{
+    // std::vector<std::pair<u_int, u_int>> crane_pairs;
+    predict_collision_crane_pairs.clear();
+
+    for(long unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+        if (main_crane_id_ == i)
+        {
+            continue;
+        }
+        // if(predictCollisionBetweenID(main_crane_id_, i, threshold))
+        if(conservativePredictCollisionBetweenID(main_crane_id_, i, threshold))
+        {
+            std::cout<<"test5"<<std::endl;
+            predict_collision_crane_pairs.push_back(std::make_pair(main_crane_id_, i));
         }
         
-        crane_list_[i].slewing_velocity = angle_diff / dt;
     }
 
+    if(show_results)
+    {
+        for(auto pair : predict_collision_crane_pairs)
+        {
+            std::cout<<"WARNNING: Crane "<<pair.first<<" and Crane "<<pair.second<<" are predicted to be too close!"<<std::endl;
+        }
+    }
+    return predict_collision_crane_pairs;
 }
+
+/// Strategy three: check the main crane's allowed motion based on slewing step angle
+void CraneAntiCollision::generateSlewingSequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, const double down_value, const double up_value)
+{
+    double step_angle = 2.0;
+    double tmp = down_value;
+    crane_sequence.clear();
+    CraneConfig crane_tmp = crane;
+
+    while(tmp < up_value)
+    {
+        crane_tmp.slewing_angle = crane.slewing_angle + tmp;
+        crane_sequence.push_back(crane_tmp);
+        tmp += step_angle;
+    }
+}
+
+u_char CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold)
+{
+    u_char allowed_motion = 0x00; // 0x00000000 (0 allowed, 1: not allowed), bit5~bit0: slew+, slew-, luff+, luff-, hoist+, hoist-
+
+    std::vector<CraneConfig> main_crane_sequence, neighbor_crane_sequence;
+    CraneConfig main_crane = crane_list_[main_crane_id_];
+
+    generateSlewingSequence(main_crane, main_crane_sequence, 0, braking_distance);
+    for(unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+        if (main_crane_id_ == i)
+        {
+            continue;
+        }
+
+        CraneConfig neighbor_crane = crane_list_[i];
+        generateSlewingSequence(neighbor_crane, neighbor_crane_sequence, -braking_distance, braking_distance);
+        if(checkCollisionBetweenSequences(main_crane_sequence, neighbor_crane_sequence, threshold, false))
+        {
+            std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
+            allowed_motion |= (1 << 5); // bit5: not allowed slewing +
+            allowed_motion |= (1 << 2); // bit2: not allowed luffing -
+            break;
+        }
+    }
+
+    generateSlewingSequence(main_crane, main_crane_sequence, -braking_distance, 0);
+    for(unsigned int i = 0; i < crane_list_.size(); i++)
+    {
+        if (main_crane_id_ == i)
+        {
+            continue;
+        }
+
+        CraneConfig neighbor_crane = crane_list_[i];
+        generateSlewingSequence(neighbor_crane, neighbor_crane_sequence, -braking_distance, braking_distance);
+        if(checkCollisionBetweenSequences(main_crane_sequence, neighbor_crane_sequence, threshold, false))
+        {
+            std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
+            allowed_motion |= (1 << 4); // bit5: not allowed slewing -
+            allowed_motion |= (1 << 2); // bit2: not allowed luffing -
+        }
+    }
+
+    std::cout<< "allowed motion direction: " << allowed_motion << std::endl;
+
+    return allowed_motion;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

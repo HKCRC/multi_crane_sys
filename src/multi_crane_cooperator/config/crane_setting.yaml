@@ -6,7 +6,8 @@ crane_list:
       h: 40.0
       d: 0.0
       jib_length: 50.0
-      is_main_crane: true
+      is_main_crane: false
+      name: "PTC1"
   - parameters:
       type: 0
       x: 0.0
@@ -14,15 +15,8 @@ crane_list:
       h: 40.0
       d: 0.0
       jib_length: 50.0
-      is_main_crane: false
-  - parameters:
-      type: 0
-      x: 92.59
-      y: 69.91
-      h: 40.0
-      d: 0.0
-      jib_length: 45.0
-      is_main_crane: false
+      is_main_crane: true
+      name: "PTC2"
   - parameters:
       type: 0
       x: 45.22
@@ -31,6 +25,16 @@ crane_list:
       d: 0.0
       jib_length: 45.0
       is_main_crane: false
+      name: "PTC4"
+#   - parameters:
+#       type: 0
+#       x: 92.59
+#       y: 69.91
+#       h: 40.0
+#       d: 0.0
+#       jib_length: 45.0
+#       is_main_crane: false
+#       name: "PTC3"
 #   - parameters:
 #       type: 1
 #       x: 80.0

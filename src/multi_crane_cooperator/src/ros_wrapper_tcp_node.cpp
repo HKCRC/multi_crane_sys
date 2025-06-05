@@ -80,10 +80,11 @@ int main(int argc, char ** argv)
         return 1;
     }
     
+    
     /*********  init tcp  ********/
     // Create and connect client
-    AntiCollisionClient anti_client("127.0.0.1", 1122);
-    ModbusSensorClient modbus_client("127.0.0.1", 8080);
+    AntiCollisionClient anti_client("192.168.1.3", 54321);
+    ModbusSensorClient modbus_client("192.168.1.2", 8080);
 
     if (!anti_client.connect()) 
     {
@@ -120,29 +121,32 @@ int main(int argc, char ** argv)
         group_sensor_data = anti_client.get_data();
         modbus_sensor_data = modbus_client.get_data();
         crane_state[1].slewing_angle = modbus_sensor_data.slew_angle.value;
-        crane_state[1].jib_angle = modbus_sensor_data.luff_angle.value;
+        crane_state[1].jib_trolley = modbus_sensor_data.luff_angle.value;
         crane_state[1].hoisting_height = modbus_sensor_data.hoist_cable_length.value;
         crane_state[0].slewing_angle = group_sensor_data.encoder1_data.value;
-        crane_state[0].jib_angle = group_sensor_data.imu1_data.roll;
+        crane_state[0].jib_trolley = group_sensor_data.imu1_data.roll;
         crane_state[0].hoisting_height = 100.0;
         crane_state[3].slewing_angle = group_sensor_data.encoder2_data.value;
-        crane_state[3].jib_angle = group_sensor_data.imu2_data.roll;
+        crane_state[3].jib_trolley = group_sensor_data.imu2_data.roll;
         crane_state[3].hoisting_height = 100.0;
 
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
-        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
-        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
-        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
+        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_trolley: "<< crane_state[0].jib_trolley << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
+        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_trolley: "<< crane_state[1].jib_trolley << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
+        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_trolley: "<< crane_state[3].jib_trolley << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
         // update cranes' state
-        crane_collision.updateCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_angle, crane_state[0].hoisting_height);
-        crane_collision.updateCraneState(1, crane_state[1].slewing_angle, crane_state[1].jib_angle, crane_state[1].hoisting_height);
-        crane_collision.updateCraneState(2, crane_state[3].slewing_angle, crane_state[3].jib_angle, crane_state[3].hoisting_height);
+        crane_collision.updateSingleCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_trolley, crane_state[0].hoisting_height);
+        crane_collision.updateSingleCraneState(1, crane_state[1].slewing_angle, crane_state[1].jib_trolley, crane_state[1].hoisting_height);
+        crane_collision.updateSingleCraneState(2, crane_state[3].slewing_angle, crane_state[3].jib_trolley, crane_state[3].hoisting_height);
         
         std::cout<<"distance between cranes: "<<std::endl;
         crane_collision.showDistanceAll();
 
         std::cout<<"collision status: "<<std::endl;
         crane_collision.checkCollisionAll(5.0, true);
+
+        std::cout<<"conservative collision status: "<<std::endl;
+        crane_collision.checkBTMainCraneAllowedMotion(30.0, 5.0);
 
         multi_crane_msg::msg::MultiCraneMsg msg;
         convertCraneMsg(crane_collision.crane_list_, msg);

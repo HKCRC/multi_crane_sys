@@ -29,8 +29,8 @@ public:
     ~CraneAntiCollision() {}
     bool loadConfigFile(std::string file_name);
     void findMainCraneID(void);
-    // void initAdjacencyMatrix(void);
     bool checkCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
+    bool checkCollisionBetweenSequences(const std::vector<CraneConfig>& crane1_sequence, const std::vector<CraneConfig>& crane2_sequence, double threshold, bool sync);
     bool predictCollisionBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2, double threshold);
     bool conservativePredictCollisionBetweenID(u_int craneID1, u_int craneID2, double threshold);
     double getDistanceBetweenCranes(const CraneConfig& crane1, const CraneConfig& crane2);
@@ -41,9 +41,10 @@ public:
     std::vector<std::pair<u_int, u_int>> predictCollisionAll(double threshold, bool show_results);
     std::vector<std::pair<u_int, u_int>> predictCollisionMainCraneNeighbor(double threshold, bool show_results);
     void showDistanceAll();
-    void updateSingleCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity);
+    void updateSingleCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity = 0.0);
     void updateAllCraneState(std::vector<CraneJointState>&  crane_joint_state);
     void updateCraneSlewingVelocity();
+    u_char checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold);
 
 private:
     double distance(const Point3D &p1, const Point3D &p2);
@@ -60,13 +61,13 @@ private:
 
     double calculateMinimalDistance(const Segment3D &jib_seg1, const Segment3D &hook_seg1, const Segment3D &jib_seg2, const Segment3D &hook_seg2);
 
-    // void generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence);
-
     void generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, double sequence_time);
 
     void conservative_generate_prediction_sequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, u_int crane_id); 
 
     void calculate_braking_time(const CraneConfig& crane1, const CraneConfig& crane2, double& braking_time);
+
+    void generateSlewingSequence(const CraneConfig& crane, std::vector<CraneConfig>& crane_sequence, const double down_value, const double up_value);
 
 public:
  std::vector<CraneConfig> crane_list_;

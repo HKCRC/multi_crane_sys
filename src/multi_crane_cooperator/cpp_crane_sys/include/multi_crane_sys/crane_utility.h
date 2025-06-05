@@ -1,6 +1,7 @@
 #ifndef CRANE_UTILITY
 #define CRANE_UTILITY
 #include <optional>
+#include <string>
 
 
 
@@ -30,6 +31,7 @@ struct TowerCraneConfig
 
 struct CraneConfig
 {
+  std::string name;
   int type; // 0: luffing jib crane; 1: tower crane
   double x; // unit: meter
   double y; // unit: meter

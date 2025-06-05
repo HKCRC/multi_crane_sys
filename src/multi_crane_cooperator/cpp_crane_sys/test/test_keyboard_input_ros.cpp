@@ -312,12 +312,15 @@ int main(int argc, char ** argv)
         std::cout<<"distance between cranes: "<<std::endl;
         crane_collision.showDistanceAll();
 
-        std::cout<<"collision status: "<<std::endl;
+        std::cout<<"static collision status: "<<std::endl;
         crane_collision.checkCollisionAll(5.0, true);
         
-        std::cout<<"predict collision status: "<<std::endl;
-        crane_collision.predictCollisionAll(5.0, true);
+        // std::cout<<"predict collision status: "<<std::endl;
+        // crane_collision.predictCollisionAll(5.0, true);
         // crane_collision.predictCollisionMainCraneNeighbor(5.0, true);
+
+        std::cout<<"conservative collision status: "<<std::endl;
+        crane_collision.checkBTMainCraneAllowedMotion(30.0, 5.0);
         
         //send to crane collision viualizer
         multi_crane_msg::msg::MultiCraneMsg msg;
