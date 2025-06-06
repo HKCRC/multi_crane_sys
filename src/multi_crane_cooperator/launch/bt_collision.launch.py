@@ -36,10 +36,10 @@ def generate_launch_description():
             arguments=[config_file_path]
             # parameters=[{"config_file_path": config_file_path}]
         ),
-        Node(
-            package='multi_crane_cooperator', 
-            executable='tcp_data_input',         
-            name='tcp_data_input',
-        )
+        # Node(
+        #     package='multi_crane_cooperator', 
+        #     executable='tcp_data_input',         
+        #     name='tcp_data_input',
+        # )
         
     ])

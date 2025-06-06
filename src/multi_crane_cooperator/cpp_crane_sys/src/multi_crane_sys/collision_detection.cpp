@@ -674,9 +674,9 @@ void CraneAntiCollision::generateSlewingSequence(const CraneConfig& crane, std::
     }
 }
 
-u_char CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold)
+int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold)
 {
-    u_char allowed_motion = 0x00; // 0x00000000 (0 allowed, 1: not allowed), bit5~bit0: slew+, slew-, luff+, luff-, hoist+, hoist-
+    int16_t allowed_motion = 0x00; // 0x00000000 (0 allowed, 1: not allowed), bit5~bit0: slew_left, slew_right, luff_up, luff_down, hook_down, hook_up
 
     std::vector<CraneConfig> main_crane_sequence, neighbor_crane_sequence;
     CraneConfig main_crane = crane_list_[main_crane_id_];

@@ -32,15 +32,20 @@ void convertSensorDataToCraneJointState(const SensorData &modbus_sensor_data, co
     double slewing_position_encoder = modbus_sensor_data.slew_angle.value;
     double luffing_position_encoder = modbus_sensor_data.luff_angle.value;
     double hoisting_position_encoder = modbus_sensor_data.hoist_cable_length.value;
-    crane_state[1].slewing_angle = slewing_coeffs[0] * slewing_position_encoder + slewing_coeffs[1] + 180 + 360;
+    
+    double tc2_slew_angle = fmod(slewing_coeffs[0] * slewing_position_encoder + slewing_coeffs[1], 360.0);
+    if (tc2_slew_angle < 0) {
+        tc2_slew_angle += 360.0;
+    }
+    crane_state[1].slewing_angle = tc2_slew_angle;
     crane_state[1].jib_trolley = luffing_coeffs[0] * pow(luffing_position_encoder,3) + luffing_coeffs[1] * pow(luffing_position_encoder, 2) + luffing_coeffs[2] * luffing_position_encoder + luffing_coeffs[3];
     crane_state[1].hoisting_height = hoisting_coeffs[0] * hoisting_position_encoder + hoisting_coeffs[1];
 
     //neighbor cranes
-    double tc1_slew_angle = fmod((neighbor_data.encoder1_data.value - 1829.7822) * 360.0/8.5 + 270.0,360.0); //deg
-    double tc4_slew_angle = fmod((neighbor_data.encoder2_data.value - 2046.7278) * 360.0/8.5 + 270.0,360.0);
-    double tc1_luffing_angle = neighbor_data.imu1_data.pitch; //deg
-    double tc4_luffing_angle = neighbor_data.imu2_data.pitch; 
+    double tc1_slew_angle = fmod((1829.7822 - neighbor_data.encoder1_data.value) * 360.0/8.5 + 90.0,360.0); //deg
+    double tc4_slew_angle = fmod((2046.7278 - neighbor_data.encoder2_data.value) * 360.0/8.5 + 90.0,360.0);
+    double tc1_luffing_angle = -neighbor_data.imu1_data.pitch; //deg
+    double tc4_luffing_angle = -neighbor_data.imu2_data.pitch; 
 
     if (tc1_slew_angle < 0) {
         tc1_slew_angle += 360.0;
@@ -105,6 +110,8 @@ int main(int argc, char ** argv)
             std::cout<<"PTC 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_trolley: "<< crane_state[0].jib_trolley << ", hoisting_length: "<< crane_state[0].hoisting_height << std::endl;
             std::cout<<"PTC 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_trolley: "<< crane_state[1].jib_trolley << ", hoisting_length: "<< crane_state[1].hoisting_height << std::endl;
             std::cout<<"PTC 4: slewing_angle: "<< crane_state[2].slewing_angle << ", jib_trolley: "<< crane_state[2].jib_trolley << ", hoisting_length: "<< crane_state[2].hoisting_height << std::endl;
+            std::cout<<"Encoder timestamp, tc1: "<< fmod(neighbor_sensor_data.encoder1_data.timestamp, 1e6) <<", tc4: "<< fmod(neighbor_sensor_data.encoder2_data.timestamp, 1e6) << std::endl;
+            std::cout<<"IMU timestamp, tc1: "<< fmod(neighbor_sensor_data.imu1_data.timestamp, 1e6)<<", tc4: "<< fmod(neighbor_sensor_data.imu2_data.timestamp, 1e6) << std::endl;
         }
 
         multi_crane_msg::msg::MultiCraneJointStateMsg msg;

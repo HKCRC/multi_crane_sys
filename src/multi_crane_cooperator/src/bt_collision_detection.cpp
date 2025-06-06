@@ -21,6 +21,7 @@
 
 #include "multi_crane_sys/collision_detection.hpp"
 #include "multi_crane_sys/crane_utility.h"
+#include "TCPSingleDataServer.h"
 
 #define DEBUG_FLAG true
 #define THRESHOLD 10.0 // threshold for collision detection, unit: m
@@ -105,6 +106,10 @@ int main(int argc, char ** argv)
         return 1;
     }
 
+    TCPSingleDataServer<int16_t> tcp_server(8085, std::chrono::milliseconds(33));
+    tcp_server.setData(0b1111111); // initialize the data to be sent
+    tcp_server.start();
+
     /******** ROS initialization *********/
     rclcpp::init(argc, argv);
 
@@ -128,7 +133,8 @@ int main(int argc, char ** argv)
 
         // adopt the conservative strategy to check collision
         std::cout<<"conservative collision detection status: "<<std::endl;
-        u_char direction = crane_collision.checkBTMainCraneAllowedMotion(30.0, THRESHOLD);
+        int16_t direction = crane_collision.checkBTMainCraneAllowedMotion(30.0, THRESHOLD);
+        tcp_server.setData(direction);
 
         if(DEBUG_FLAG)
         {
@@ -143,6 +149,8 @@ int main(int argc, char ** argv)
             {
                 std::cout<<"!!! TC2's Slewing - is not allowed"<<std::endl;
             }
+
+            std::cout<< "Not allowed motion direction:"<< direction << std::endl;
 
             multi_crane_msg::msg::MultiCraneMsg msg;
             convertCraneMsg(crane_collision.crane_list_, msg);

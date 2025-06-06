@@ -44,7 +44,7 @@ public:
     void updateSingleCraneState(u_int craneID, double slew, double jib_trolley, double hoist, double slewing_velocity = 0.0);
     void updateAllCraneState(std::vector<CraneJointState>&  crane_joint_state);
     void updateCraneSlewingVelocity();
-    u_char checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold);
+    int16_t checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold);
 
 private:
     double distance(const Point3D &p1, const Point3D &p2);
