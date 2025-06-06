@@ -23,11 +23,26 @@ find_package(multi_crane_msg REQUIRED)
 
 add_subdirectory(cpp_crane_sys)
 
-add_executable(ros_wrapper_tcp_node src/ros_wrapper_tcp_node.cpp)
+add_executable(tcp_data_input src/tcp_data_input.cpp)
+ament_target_dependencies(tcp_data_input rclcpp std_msgs multi_crane_msg)
+target_link_libraries(tcp_data_input multi_crane_sys)
+
+add_executable(keyboard_input src/keyboard_input.cpp)
+ament_target_dependencies(keyboard_input rclcpp std_msgs multi_crane_msg)
+target_link_libraries(keyboard_input multi_crane_sys)
+
+add_executable(bt_collision_detection src/bt_collision_detection.cpp)
+ament_target_dependencies(bt_collision_detection rclcpp std_msgs multi_crane_msg)
+target_link_libraries(bt_collision_detection multi_crane_sys)
+
+add_executable(ros_wrapper_tcp_node test/ros_wrapper_tcp_node.cpp)
 ament_target_dependencies(ros_wrapper_tcp_node rclcpp std_msgs multi_crane_msg)
 target_link_libraries(ros_wrapper_tcp_node multi_crane_sys)
 
 install(TARGETS ros_wrapper_tcp_node
+  tcp_data_input
+  keyboard_input
+  bt_collision_detection
   DESTINATION lib/${PROJECT_NAME})
 
 

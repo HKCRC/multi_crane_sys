@@ -718,8 +718,6 @@ u_char CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_di
         }
     }
 
-    std::cout<< "allowed motion direction: " << allowed_motion << std::endl;
-
     return allowed_motion;
 }
 

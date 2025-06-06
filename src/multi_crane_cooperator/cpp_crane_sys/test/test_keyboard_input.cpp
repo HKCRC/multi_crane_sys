@@ -43,10 +43,10 @@ void keyboardListener()
             crane_state[0].slewing_angle -= 5.0f;
             break;
         case 'w': 
-            crane_state[0].jib_angle += 5.0f;
+            crane_state[0].jib_trolley += 5.0f;
             break;
         case 's':
-            crane_state[0].jib_angle -= 5.0f;
+            crane_state[0].jib_trolley -= 5.0f;
             break;
         case 'r': 
             crane_state[0].hoisting_height -= 1.0f;
@@ -61,10 +61,10 @@ void keyboardListener()
             crane_state[1].slewing_angle -= 5.0f;
             break;
         case 'u': 
-            crane_state[1].jib_angle += 5.0f;
+            crane_state[1].jib_trolley += 5.0f;
             break;
         case 'j':
-            crane_state[1].jib_angle -= 5.0f;
+            crane_state[1].jib_trolley -= 5.0f;
             break;
         case 'o': 
             crane_state[1].hoisting_height -= 1.0f;
@@ -79,10 +79,10 @@ void keyboardListener()
             crane_state[3].slewing_angle -= 5.0f;
             break;
         case '8': 
-            crane_state[3].jib_angle += 5.0f;
+            crane_state[3].jib_trolley += 5.0f;
             break;
         case '2':
-            crane_state[3].jib_angle -= 5.0f;
+            crane_state[3].jib_trolley -= 5.0f;
             break;
         case '-': 
             crane_state[3].hoisting_height -= 1.0f;
@@ -124,13 +124,13 @@ int main(int argc, char ** argv)
     while(true)
     {
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
-        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
-        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
-        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
+        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_trolley: "<< crane_state[0].jib_trolley << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
+        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_trolley: "<< crane_state[1].jib_trolley << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
+        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_trolley: "<< crane_state[3].jib_trolley << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
 
-        crane_collision.updateCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_angle, crane_state[0].hoisting_height);
-        crane_collision.updateCraneState(1, crane_state[1].slewing_angle, crane_state[1].jib_angle, crane_state[1].hoisting_height);
-        crane_collision.updateCraneState(2, crane_state[3].slewing_angle, crane_state[3].jib_angle, crane_state[3].hoisting_height);
+        crane_collision.updateSingleCraneState(0, crane_state[0].slewing_angle, crane_state[0].jib_trolley, crane_state[0].hoisting_height);
+        crane_collision.updateSingleCraneState(1, crane_state[1].slewing_angle, crane_state[1].jib_trolley, crane_state[1].hoisting_height);
+        crane_collision.updateSingleCraneState(2, crane_state[3].slewing_angle, crane_state[3].jib_trolley, crane_state[3].hoisting_height);
         
         std::cout<<"distance between cranes: "<<std::endl;
         crane_collision.showDistanceAll();

@@ -18,7 +18,7 @@
 
 using namespace std;
 
-CraneJointState crane_state[4];
+std::vector<CraneJointState> crane_state(4);
 
 int main(int argc, char ** argv)
 {
@@ -74,25 +74,25 @@ int main(int argc, char ** argv)
         modbus_sensor_data = modbus_client.get_data();
         // Update crane state
         crane_state[1].slewing_angle = modbus_sensor_data.slew_angle.value;
-        crane_state[1].jib_angle = modbus_sensor_data.luff_angle.value;
+        crane_state[1].jib_trolley = modbus_sensor_data.luff_angle.value;
         crane_state[1].hoisting_height = modbus_sensor_data.hoist_cable_length.value;
-        crane_state[i].current_time  = current_time;
+        // crane_state[i].current_time  = current_time;
 
         crane_state[0].slewing_angle = group_sensor_data.encoder1_data.value;
-        crane_state[0].jib_angle = group_sensor_data.imu1_data.roll;
+        crane_state[0].jib_trolley = group_sensor_data.imu1_data.roll;
         crane_state[0].hoisting_height = 100.0;
-        crane_state[i].current_time  = current_time;
+        // crane_state[i].current_time  = current_time;
         
         crane_state[3].slewing_angle = group_sensor_data.encoder2_data.value;
-        crane_state[3].jib_angle = group_sensor_data.imu2_data.roll;
+        crane_state[3].jib_trolley = group_sensor_data.imu2_data.roll;
         crane_state[3].hoisting_height = 100.0;
-        crane_state[i].current_time  = current_time;
+        // crane_state[i].current_time  = current_time;
 
         
         std::cout<<"----------iterator: "<< cnt++ << "  ---------"<< std::endl;
-        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_angle: "<< crane_state[0].jib_angle << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
-        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_angle: "<< crane_state[1].jib_angle << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
-        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_angle: "<< crane_state[3].jib_angle << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
+        std::cout<<"Crane 1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_trolley: "<< crane_state[0].jib_trolley << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
+        std::cout<<"Crane 2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_trolley: "<< crane_state[1].jib_trolley << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
+        std::cout<<"Crane 4: slewing_angle: "<< crane_state[3].slewing_angle << ", jib_trolley: "<< crane_state[3].jib_trolley << ", hoisting_height: "<< crane_state[3].hoisting_height << std::endl;
 
         // update cranes' state and slewing velocity
         crane_collision.updateAllCraneState(crane_state);
