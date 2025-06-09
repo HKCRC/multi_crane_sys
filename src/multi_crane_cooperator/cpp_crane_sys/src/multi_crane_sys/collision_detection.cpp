@@ -676,7 +676,7 @@ void CraneAntiCollision::generateSlewingSequence(const CraneConfig& crane, std::
 
 int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_distance, const double threshold)
 {
-    int16_t allowed_motion = 0x00; // 0x00000000 (0 allowed, 1: not allowed), bit5~bit0: slew_left, slew_right, luff_up, luff_down, hook_down, hook_up
+    int16_t allowed_motion = 0x00; // 0x00000000 (0 allowed, 1: not allowed), bit5~bit0: luff_up, luff_down, slew_left, slew_right, hook_up, hook_down
 
     std::vector<CraneConfig> main_crane_sequence, neighbor_crane_sequence;
     CraneConfig main_crane = crane_list_[main_crane_id_];
@@ -694,8 +694,8 @@ int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_d
         if(checkCollisionBetweenSequences(main_crane_sequence, neighbor_crane_sequence, threshold, false))
         {
             std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
-            allowed_motion |= (1 << 5); // bit5: not allowed slewing +
-            allowed_motion |= (1 << 2); // bit2: not allowed luffing -
+            allowed_motion |= (1 << 3); // bit3: not allowed slewing left
+            allowed_motion |= (1 << 4); // bit4: not allowed luffing down
             break;
         }
     }
@@ -713,8 +713,8 @@ int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_d
         if(checkCollisionBetweenSequences(main_crane_sequence, neighbor_crane_sequence, threshold, false))
         {
             std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
-            allowed_motion |= (1 << 4); // bit5: not allowed slewing -
-            allowed_motion |= (1 << 2); // bit2: not allowed luffing -
+            allowed_motion |= (1 << 2); // bit5: not allowed slewing right
+            allowed_motion |= (1 << 4); // bit2: not allowed luffing down
         }
     }
 

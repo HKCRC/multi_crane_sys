@@ -61,6 +61,14 @@ void convertSensorDataToCraneJointState(const SensorData &modbus_sensor_data, co
     crane_state[2].hoisting_height = 100.0;
 }
 
+void signalHandler(int signal) 
+{
+    std::cout << "Caught signal: " << signal << std::endl;
+    rclcpp::shutdown();
+    std::cout << "Exiting program..." << std::endl;
+    exit(0);
+}
+
 int main(int argc, char ** argv)
 {
     // connect to server to get crane data 
@@ -94,6 +102,8 @@ int main(int argc, char ** argv)
     auto node = rclcpp::Node::make_shared("data_input_tcp");
   
     rclcpp::Publisher<multi_crane_msg::msg::MultiCraneJointStateMsg>::SharedPtr publisher = node->create_publisher<multi_crane_msg::msg::MultiCraneJointStateMsg>("multi_crane_input", 10);
+    
+    signal(SIGINT, signalHandler); // 捕获异常SIGINT
     
     long int cnt = 0;
     while (rclcpp::ok())

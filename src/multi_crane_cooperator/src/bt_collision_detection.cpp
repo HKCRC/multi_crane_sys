@@ -108,7 +108,17 @@ int main(int argc, char ** argv)
 
     TCPSingleDataServer<int16_t> tcp_server(8085, std::chrono::milliseconds(33));
     tcp_server.setData(0b1111111); // initialize the data to be sent
-    tcp_server.start();
+    tcp_server.set_data_source(std::bind(&TCPSingleDataServer<int16_t>::getData, &tcp_server));
+    if (!tcp_server.start())
+    {
+        std::cout<<"server start failed"<<std::endl;
+        return 1;
+    }
+    else
+    {
+        std::cout<<"server start success"<<std::endl;
+    }
+    sleep(2);
 
     /******** ROS initialization *********/
     rclcpp::init(argc, argv);
@@ -120,6 +130,8 @@ int main(int argc, char ** argv)
         std::bind(callbackCraneState, std::placeholders::_1));
     
     auto publisher = node->create_publisher<multi_crane_msg::msg::MultiCraneMsg>("multi_crane", 10);
+
+    signal(SIGINT, signalHandler); // 捕获异常SIGINT
     
     long int cnt = 0;
     while (rclcpp::ok())
@@ -134,6 +146,7 @@ int main(int argc, char ** argv)
         // adopt the conservative strategy to check collision
         std::cout<<"conservative collision detection status: "<<std::endl;
         int16_t direction = crane_collision.checkBTMainCraneAllowedMotion(30.0, THRESHOLD);
+        // direction = 0b00111111; // reset the direction to 0b0000000
         tcp_server.setData(direction);
 
         if(DEBUG_FLAG)
@@ -141,13 +154,13 @@ int main(int argc, char ** argv)
             std::cout<<"TC1: slewing_angle: "<< crane_state[0].slewing_angle << ", jib_trolley: "<< crane_state[0].jib_trolley << ", hoisting_height: "<< crane_state[0].hoisting_height << std::endl;
             std::cout<<"TC2: slewing_angle: "<< crane_state[1].slewing_angle << ", jib_trolley: "<< crane_state[1].jib_trolley << ", hoisting_height: "<< crane_state[1].hoisting_height << std::endl;
             std::cout<<"TC4: slewing_angle: "<< crane_state[2].slewing_angle << ", jib_trolley: "<< crane_state[2].jib_trolley << ", hoisting_height: "<< crane_state[2].hoisting_height << std::endl;
-            if(direction & ( 1<<5 ))
+            if(direction & ( 1<<3 ))
             {
-                std::cout<<"!!! TC2's Slewing + is not allowed"<<std::endl;
+                std::cout<<"!!! TC2's Slewing left is not allowed"<<std::endl;
             }
-            if(direction & ( 1<<4 ))
+            if(direction & ( 1<<2 ))
             {
-                std::cout<<"!!! TC2's Slewing - is not allowed"<<std::endl;
+                std::cout<<"!!! TC2's Slewing right is not allowed"<<std::endl;
             }
 
             std::cout<< "Not allowed motion direction:"<< direction << std::endl;
