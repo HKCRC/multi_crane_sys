@@ -32,7 +32,6 @@ void convertSensorDataToCraneJointState(const SensorData &modbus_sensor_data, co
     double slewing_position_encoder = modbus_sensor_data.slew_angle.value;
     double luffing_position_encoder = modbus_sensor_data.luff_angle.value;
     double hoisting_position_encoder = modbus_sensor_data.hoist_cable_length.value;
-    
     double tc2_slew_angle = fmod(slewing_coeffs[0] * slewing_position_encoder + slewing_coeffs[1], 360.0);
     if (tc2_slew_angle < 0) {
         tc2_slew_angle += 360.0;
@@ -42,22 +41,42 @@ void convertSensorDataToCraneJointState(const SensorData &modbus_sensor_data, co
     crane_state[1].hoisting_height = hoisting_coeffs[0] * hoisting_position_encoder + hoisting_coeffs[1];
 
     //neighbor cranes
-    double tc1_slew_angle = fmod((1829.7822 - neighbor_data.encoder1_data.value) * 360.0/8.5 + 90.0,360.0); //deg
-    double tc4_slew_angle = fmod((2046.7278 - neighbor_data.encoder2_data.value) * 360.0/8.5 + 90.0,360.0);
-    double tc1_luffing_angle = -neighbor_data.imu1_data.pitch; //deg
-    double tc4_luffing_angle = -neighbor_data.imu2_data.pitch; 
-
-    if (tc1_slew_angle < 0) {
-        tc1_slew_angle += 360.0;
+    double tc1_slew_angle, tc4_slew_angle, tc1_luffing_angle, tc4_luffing_angle;
+    if(neighbor_data.encoder1_data.value < 0.001 || neighbor_data.encoder2_data.value < 0.001 || 
+        abs(neighbor_data.imu1_data.pitch) < 0.001 || abs(neighbor_data.imu2_data.pitch) < 0.001)
+    {
+        std::cerr << "Error: Encoder values from neighbor cranes are invalid!" << std::endl;
     }
-    if (tc4_slew_angle < 0) {
-        tc4_slew_angle += 360.0;
+    
+    if(neighbor_data.encoder1_data.value > 0.001)
+    {
+        tc1_slew_angle = fmod((1829.7822 - neighbor_data.encoder1_data.value) * 360.0/8.5 + 90.0,360.0); //deg
+        if (tc1_slew_angle < 0) 
+        {
+            tc1_slew_angle += 360.0;
+        }
+        crane_state[0].slewing_angle = tc1_slew_angle;
     }
-    crane_state[0].slewing_angle = tc1_slew_angle;
-    crane_state[0].jib_trolley = tc1_luffing_angle;
+    if(neighbor_data.encoder2_data.value > 0.001)
+    {
+        tc4_slew_angle = fmod((2046.7278 - neighbor_data.encoder2_data.value) * 360.0/8.5 + 90.0,360.0); //deg
+        if (tc4_slew_angle < 0) 
+        {
+            tc4_slew_angle += 360.0;
+        }
+        crane_state[2].slewing_angle = tc4_slew_angle;
+    }
+    if(abs(neighbor_data.imu1_data.pitch) > 0.001)
+    {
+        tc1_luffing_angle = -neighbor_data.imu1_data.pitch; //deg
+        crane_state[0].jib_trolley = tc1_luffing_angle;
+    }
+    if(abs(neighbor_data.imu2_data.pitch) > 0.001)
+    {
+        tc4_luffing_angle = -neighbor_data.imu2_data.pitch; //deg`
+        crane_state[2].jib_trolley = tc4_luffing_angle;
+    }
     crane_state[0].hoisting_height = 100.0;
-    crane_state[2].slewing_angle = tc4_slew_angle;
-    crane_state[2].jib_trolley = tc4_luffing_angle;
     crane_state[2].hoisting_height = 100.0;
 }
 

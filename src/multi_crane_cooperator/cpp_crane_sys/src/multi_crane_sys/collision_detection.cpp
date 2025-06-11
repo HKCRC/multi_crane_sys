@@ -696,6 +696,7 @@ int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_d
             std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
             allowed_motion |= (1 << 3); // bit3: not allowed slewing left
             allowed_motion |= (1 << 4); // bit4: not allowed luffing down
+            allowed_motion |= (1 << 5); // bit5: not allowed luffing up
             break;
         }
     }
@@ -715,6 +716,7 @@ int16_t CraneAntiCollision::checkBTMainCraneAllowedMotion(const double braking_d
             std::cout<<"WARNNING: Crane "<< crane_list_[main_crane_id_].name <<" and Crane "<< crane_list_[i].name <<" are predicted to be too close!"<<std::endl;
             allowed_motion |= (1 << 2); // bit5: not allowed slewing right
             allowed_motion |= (1 << 4); // bit2: not allowed luffing down
+            allowed_motion |= (1 << 5); // bit3: not allowed luffing up
         }
     }
 
